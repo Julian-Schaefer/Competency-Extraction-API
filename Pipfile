@@ -7,6 +7,7 @@ name = "pypi"
 flask = "*"
 pre-commit = "*"
 gunicorn = "*"
+neo4j = "*"
 
 [dev-packages]
 

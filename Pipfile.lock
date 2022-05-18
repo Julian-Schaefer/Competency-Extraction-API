@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b88bc892164f0793a8d2a995b6845f63020b27fc2f129a3ff1a0c38a4798d041"
+            "sha256": "656549f12d5eba4d6802173b16b6ecb9e81218acaad450d4fd0759c05a1d1830"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -141,6 +141,13 @@
             "markers": "python_version >= '3.7'",
             "version": "==2.1.1"
         },
+        "neo4j": {
+            "hashes": [
+                "sha256:f2c9838607f7c95fa6e0c0153be48dfbbcef6f29930df3c596509490ca9eea8c"
+            ],
+            "index": "pypi",
+            "version": "==4.4.3"
+        },
         "nodeenv": {
             "hashes": [
                 "sha256:3ef13ff90291ba2a4a7a4ff9a979b63ffdd00a464dbe04acf0ea6471517a4c2b",
@@ -163,6 +170,13 @@
             ],
             "index": "pypi",
             "version": "==2.19.0"
+        },
+        "pytz": {
+            "hashes": [
+                "sha256:1e760e2fe6a8163bc0b3d9a19c4f84342afa0a2affebfaa84b01b978a02ecaa7",
+                "sha256:e68985985296d9a66a881eb3193b0906246245294a881e7c8afe623866ac6a5c"
+            ],
+            "version": "==2022.1"
         },
         "pyyaml": {
             "hashes": [
