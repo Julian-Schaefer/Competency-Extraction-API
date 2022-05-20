@@ -1,5 +1,18 @@
 from tokenize import String
 from neo4j import GraphDatabase
+from neo4j.exceptions import ClientError
+
+
+class CompetencyInsertionFailed(Exception):
+    """Raised when competency couldn't be inserted into the DB"""
+
+    pass
+
+
+class CourseInsertionFailed(Exception):
+    """Raised when course couldn't be inserted into the DB"""
+
+    pass
 
 
 class GraphDatabaseConnection:
@@ -14,6 +27,21 @@ class GraphDatabaseConnection:
     def create_competency(
         self, competecyName: String, competencyBody: String
     ) -> String:
+        """
+        Create competency
+
+        Insert competeny with its name and body into the db
+
+        Parameters:
+        competencyName: Competency name as string
+        competencyBody: Competency body as string
+
+        Raises: CompetencyInsertionFailed if insertion into DB failed
+
+        Returns:
+        String: Competency name and node
+
+        """
         with self.driver.session() as session:
             competency = session.write_transaction(
                 self._create_competency_transaction,
@@ -26,17 +54,33 @@ class GraphDatabaseConnection:
     def _create_competency_transaction(
         tx, competencyName: String, competencyBody: String
     ) -> String:
-        result = tx.run(
-            "CREATE (c:Competency) "
-            "SET c.name = $name "
-            "SET c.body = $body "
-            "RETURN c.name + ', from node ' + id(c)",
-            name=competencyName,
-            body=competencyBody,
-        )
+        query = "CREATE (c:Competency) SET c.name = $name SET c.body = $body RETURN c.name + ', from node ' + id(c)"
+        try:
+            result = tx.run(
+                query,
+                name=competencyName,
+                body=competencyBody,
+            )
+        except ClientError as e:
+            raise CompetencyInsertionFailed(f"{query} raised an error: \n {e}")
         return result.single()[0]
 
     def create_course(self, courseName: String, courseBody: String) -> String:
+        """
+        Create course
+
+        Insert competeny with its name and body into the db
+
+        Parameters:
+        courseName: course name as string
+        courseBody: course body as string
+
+        Raises: CourseInsertionFailed if insertion into DB failed
+
+        Returns:
+        String: course name and node
+
+        """
         with self.driver.session() as session:
             course = session.write_transaction(
                 self._create_course_transaction, courseName, courseBody
@@ -47,12 +91,13 @@ class GraphDatabaseConnection:
     def _create_course_transaction(
         tx, courseName: String, courseBody: String
     ) -> String:
-        result = tx.run(
-            "CREATE (c:Course) "
-            "SET c.name = $name "
-            "SET c.body = $body "
-            "RETURN c.name + ', from node ' + id(c)",
-            name=courseName,
-            body=courseBody,
-        )
+        query = "CREATE (c:Course) SET c.name = $name SET c.body = $body RETURN c.name + ', from node ' + id(c)"
+        try:
+            result = tx.run(
+                query,
+                name=courseName,
+                body=courseBody,
+            )
+        except ClientError as e:
+            raise CourseInsertionFailed(f"{query} raised an error: \n {e}")
         return result.single()[0]
