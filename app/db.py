@@ -1,28 +1,58 @@
+from tokenize import String
 from neo4j import GraphDatabase
 
 
 class GraphDatabaseConnection:
     def __init__(self):
-        self.driver = GraphDatabase.driver("bolt://db:7687", auth=("neo4j", "password"))
+        self.driver = GraphDatabase.driver(
+            "bolt://db:7687", auth=("neo4j", "password")
+        )
 
     def close(self):
         self.driver.close()
 
-
-    def test_connection(self, message):
+    def create_competency(
+        self, competecyName: String, competencyBody: String
+    ) -> String:
         with self.driver.session() as session:
-            greeting = session.write_transaction(
-                self._create_and_return_greeting, message
+            competency = session.write_transaction(
+                self._create_competency_transaction,
+                competecyName,
+                competencyBody,
             )
-            return greeting
-            
+            return competency
 
     @staticmethod
-    def _create_and_return_greeting(tx, message):
+    def _create_competency_transaction(
+        tx, competencyName: String, competencyBody: String
+    ) -> String:
         result = tx.run(
-            "CREATE (a:Greeting) "
-            "SET a.message = $message "
-            "RETURN a.message + ', from node ' + id(a)",
-            message=message,
+            "CREATE (c:Competency) "
+            "SET c.name = $name "
+            "SET c.body = $body "
+            "RETURN c.name + ', from node ' + id(c)",
+            name=competencyName,
+            body=competencyBody,
+        )
+        return result.single()[0]
+
+    def create_course(self, courseName: String, courseBody: String) -> String:
+        with self.driver.session() as session:
+            course = session.write_transaction(
+                self._create_course_transaction, courseName, courseBody
+            )
+            return course
+
+    @staticmethod
+    def _create_course_transaction(
+        tx, courseName: String, courseBody: String
+    ) -> String:
+        result = tx.run(
+            "CREATE (c:Course) "
+            "SET c.name = $name "
+            "SET c.body = $body "
+            "RETURN c.name + ', from node ' + id(c)",
+            name=courseName,
+            body=courseBody,
         )
         return result.single()[0]
