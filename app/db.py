@@ -1,4 +1,3 @@
-from tokenize import String
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 
@@ -25,8 +24,8 @@ class GraphDatabaseConnection:
         self.driver.close()
 
     def create_competency(
-        self, competecyName: String, competencyBody: String
-    ) -> String:
+        self, competecyName: str, competencyBody: str
+    ) -> str:
         """
         Create competency
 
@@ -39,7 +38,7 @@ class GraphDatabaseConnection:
         Raises: CompetencyInsertionFailed if insertion into DB failed
 
         Returns:
-        String: Competency name and node
+        Competency name and node as string
 
         """
         with self.driver.session() as session:
@@ -52,8 +51,8 @@ class GraphDatabaseConnection:
 
     @staticmethod
     def _create_competency_transaction(
-        tx, competencyName: String, competencyBody: String
-    ) -> String:
+        tx, competencyName: str, competencyBody: str
+    ) -> str:
         query = "CREATE (c:Competency) SET c.name = $name SET c.body = $body RETURN c.name + ', from node ' + id(c)"
         try:
             result = tx.run(
@@ -65,7 +64,7 @@ class GraphDatabaseConnection:
             raise CompetencyInsertionFailed(f"{query} raised an error: \n {e}")
         return result.single()[0]
 
-    def create_course(self, courseName: String, courseBody: String) -> String:
+    def create_course(self, courseName: str, courseBody: str) -> str:
         """
         Create course
 
@@ -78,7 +77,7 @@ class GraphDatabaseConnection:
         Raises: CourseInsertionFailed if insertion into DB failed
 
         Returns:
-        String: course name and node
+        course name and node as string
 
         """
         with self.driver.session() as session:
@@ -89,8 +88,8 @@ class GraphDatabaseConnection:
 
     @staticmethod
     def _create_course_transaction(
-        tx, courseName: String, courseBody: String
-    ) -> String:
+        tx, courseName: str, courseBody: str
+    ) -> str:
         query = "CREATE (c:Course) SET c.name = $name SET c.body = $body RETURN c.name + ', from node ' + id(c)"
         try:
             result = tx.run(
