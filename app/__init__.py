@@ -21,8 +21,14 @@ def create_course(course_name: str):
             status=400,
             mimetype="application/json",
         )
+    course_body = json.loads(request.data).get("course_body")
 
-    course_body = json.loads(request.data)["body"]
+    if not course_body:
+        return Response(
+            "Body 'course_body' is missing",
+            status=400,
+            mimetype="application/json",
+        )
 
     db = GraphDatabaseConnection()
     try:
@@ -43,7 +49,13 @@ def create_competency(competency_name):
             mimetype="application/json",
         )
 
-    competency_body = json.loads(request.data)["body"]
+    competency_body = json.loads(request.data).get("competency_body")
+    if not competency_body:
+        return Response(
+            "Body 'competency_body' is missing",
+            status=400,
+            mimetype="application/json",
+        )
 
     db = GraphDatabaseConnection()
     try:
