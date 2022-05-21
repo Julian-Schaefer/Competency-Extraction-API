@@ -1,4 +1,4 @@
-from flask import Flask, Response, request, json
+from flask import Flask, Response, request, json, jsonify
 from app.db import (
     GraphDatabaseConnection,
     CompetencyInsertionFailed,
@@ -51,7 +51,7 @@ def retrieve_courses():
         return Response(f"error: {e}", status=400, mimetype="application/json")
     db.close()
 
-    return f"Courses: {str(courses)}"
+    return jsonify(courses)
 
 
 @app.route("/competencies", methods=["GET", "HEAD"])
@@ -63,7 +63,7 @@ def retrieve_competencies():
         return Response(f"error: {e}", status=400, mimetype="application/json")
     db.close()
 
-    return f"Competencies: {str(competencies)}"
+    return jsonify(competencies)
 
 
 @app.route("/competency/<string:competency_name>", methods=["POST"])

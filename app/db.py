@@ -66,7 +66,7 @@ class GraphDatabaseConnection:
     def _create_competency_transaction(
         tx, competencyName: str, competencyBody: str
     ) -> str:
-        query = "CREATE (c:Competency) SET c.name = $name SET c.body = $body RETURN c.name + ', from node ' + id(c)"
+        query = "CREATE (c:Competency) SET c.name = $name SET c.body = $body RETURN [id(c), c.name, c.body] AS result"
         try:
             result = tx.run(
                 query,
@@ -75,7 +75,10 @@ class GraphDatabaseConnection:
             )
         except ClientError as e:
             raise CompetencyInsertionFailed(f"{query} raised an error: \n {e}")
-        return result.single()[0]
+
+        result = result.single()["result"]
+        competency = {"id": result[0], "name": result[1], "body": result[2]}
+        return competency
 
     def create_course(self, courseName: str, courseBody: str) -> str:
         """
@@ -103,7 +106,7 @@ class GraphDatabaseConnection:
     def _create_course_transaction(
         tx, courseName: str, courseBody: str
     ) -> str:
-        query = "CREATE (c:Course) SET c.name = $name SET c.body = $body RETURN c.name + ', from node ' + id(c)"
+        query = "CREATE (c:Course) SET c.name = $name SET c.body = $body RETURN [id(c), c.name, c.body] AS result"
         try:
             result = tx.run(
                 query,
@@ -112,7 +115,10 @@ class GraphDatabaseConnection:
             )
         except ClientError as e:
             raise CourseInsertionFailed(f"{query} raised an error: \n {e}")
-        return result.single()[0]
+
+        result = result.single()["result"]
+        course = {"id": result[0], "name": result[1], "body": result[2]}
+        return course
 
     def retrieve_all_courses(self) -> List[Optional[Dict]]:
         """
@@ -132,14 +138,22 @@ class GraphDatabaseConnection:
 
     @staticmethod
     def _retrieve_all_courses(tx) -> List[Optional[Dict]]:
-        query = "MATCH (c:Course) RETURN c"
+        query = "MATCH (c:Course) RETURN [id(c), c.name, c.body] AS result"
         try:
             result = tx.run(
                 query,
             )
         except ClientError as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
-        courses = [course["c"] for course in result.data()]
+
+        courses = [
+            {
+                "id": c["result"][0],
+                "name": c["result"][1],
+                "body": c["result"][2],
+            }
+            for c in result.data()
+        ]
         return courses
 
     def retrieve_all_competencies(self) -> List[Optional[Dict]]:
@@ -162,7 +176,7 @@ class GraphDatabaseConnection:
 
     @staticmethod
     def _retrieve_all_competencies(tx) -> List[Optional[Dict]]:
-        query = "MATCH (c:Competency) RETURN c"
+        query = "MATCH (c:Competency) RETURN [id(c), c.name, c.body] AS result"
         try:
             result = tx.run(
                 query,
@@ -172,5 +186,12 @@ class GraphDatabaseConnection:
                 f"{query} raised an error: \n {e}"
             )
 
-        competencies = [competency["c"] for competency in result.data()]
+        competencies = [
+            {
+                "id": c["result"][0],
+                "name": c["result"][1],
+                "body": c["result"][2],
+            }
+            for c in result.data()
+        ]
         return competencies

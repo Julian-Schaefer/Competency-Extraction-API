@@ -49,7 +49,7 @@ var spec = {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/Competency"
                 }
               }
             }
@@ -96,7 +96,7 @@ var spec = {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/Course"
                 }
               }
             }
@@ -179,6 +179,9 @@ var spec = {
     "schemas": {
       "Course": {
         "properties": {
+          "id": {
+            "type": "integer"
+          },
           "name": {
             "type": "string"
           },
@@ -189,6 +192,9 @@ var spec = {
       },
       "Competency": {
         "properties": {
+          "id": {
+            "type": "integer"
+          },
           "name": {
             "type": "string"
           },

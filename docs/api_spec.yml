@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/Competency'
       requestBody:
         description: Add a new competency
         required: true
@@ -67,7 +67,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/Course'
       requestBody:
         description: Add a new course
         required: true
@@ -115,12 +115,16 @@ components:
   schemas:
     Course:
       properties:
+        id:
+          type: integer
         name:
           type: string
         body:
           type: string
     Competency:
       properties:
+        id:
+          type: integer
         name:
           type: string
         body:
