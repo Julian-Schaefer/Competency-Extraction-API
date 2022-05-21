@@ -1,3 +1,4 @@
+from typing import List, Optional, Dict
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 
@@ -10,6 +11,18 @@ class CompetencyInsertionFailed(Exception):
 
 class CourseInsertionFailed(Exception):
     """Raised when course couldn't be inserted into the DB"""
+
+    pass
+
+
+class RetrievingCourseFailed(Exception):
+    """Raised when course(s) couldn't be retrieved"""
+
+    pass
+
+
+class RetrievingCompetencyFailed(Exception):
+    """Raised when competency(ies) couldn't be retrieved"""
 
     pass
 
@@ -100,3 +113,64 @@ class GraphDatabaseConnection:
         except ClientError as e:
             raise CourseInsertionFailed(f"{query} raised an error: \n {e}")
         return result.single()[0]
+
+    def retrieve_all_courses(self) -> List[Optional[Dict]]:
+        """
+        Retrieve all courses
+
+        Queries all nodes from the DB with the label course
+
+        Raises: RetrieveCoursesFailed if retrieving courses failed
+
+        Returns:
+        List of courses as dict
+
+        """
+        with self.driver.session() as session:
+            course = session.write_transaction(self._retrieve_all_courses)
+            return course
+
+    @staticmethod
+    def _retrieve_all_courses(tx) -> List[Optional[Dict]]:
+        query = "MATCH (c:Course) RETURN c"
+        try:
+            result = tx.run(
+                query,
+            )
+        except ClientError as e:
+            raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
+        courses = [course["c"] for course in result.data()]
+        return courses
+
+    def retrieve_all_competencies(self) -> List[Optional[Dict]]:
+        """
+        Retrieve all competencies
+
+        Queries all nodes from the DB with the label competency
+
+        Raises: RetrieveCompetencyFailed if retrieving competencies failed
+
+        Returns:
+        List of competencies as dict
+
+        """
+        with self.driver.session() as session:
+            competencies = session.write_transaction(
+                self._retrieve_all_competencies
+            )
+            return competencies
+
+    @staticmethod
+    def _retrieve_all_competencies(tx) -> List[Optional[Dict]]:
+        query = "MATCH (c:Competency) RETURN c"
+        try:
+            result = tx.run(
+                query,
+            )
+        except ClientError as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
+
+        competencies = [competency["c"] for competency in result.data()]
+        return competencies

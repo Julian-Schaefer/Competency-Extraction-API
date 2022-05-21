@@ -3,6 +3,8 @@ from app.db import (
     GraphDatabaseConnection,
     CompetencyInsertionFailed,
     CourseInsertionFailed,
+    RetrievingCourseFailed,
+    RetrievingCompetencyFailed,
 )
 
 app = Flask(__name__)
@@ -37,7 +39,31 @@ def create_course(course_name: str):
         return Response(f"error: {e}", status=400, mimetype="application/json")
     db.close()
 
-    return f"<p>Course: {course}</p>"
+    return f"Course: {course}"
+
+
+@app.route("/courses", methods=["GET", "HEAD"])
+def retrieve_courses():
+    db = GraphDatabaseConnection()
+    try:
+        courses = db.retrieve_all_courses()
+    except RetrievingCourseFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
+    db.close()
+
+    return f"Courses: {str(courses)}"
+
+
+@app.route("/competencies", methods=["GET", "HEAD"])
+def retrieve_competencies():
+    db = GraphDatabaseConnection()
+    try:
+        competencies = db.retrieve_all_competencies()
+    except RetrievingCompetencyFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
+    db.close()
+
+    return f"Competencies: {str(competencies)}"
 
 
 @app.route("/competency/<string:competency_name>", methods=["POST"])
@@ -67,4 +93,4 @@ def create_competency(competency_name):
         return Response(f"error: {e}", status=400, mimetype="application/json")
     db.close()
 
-    return f"<p>Competency: {competency}</p>"
+    return f"Competency: {competency}"
