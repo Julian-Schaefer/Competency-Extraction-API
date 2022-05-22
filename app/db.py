@@ -37,7 +37,7 @@ class GraphDatabaseConnection:
         self.driver.close()
 
     def create_competency(
-        self, competecyName: str, competencyBody: str
+        self, competencyName: str, competencyBody: str
     ) -> str:
         """
         Create competency
@@ -45,8 +45,8 @@ class GraphDatabaseConnection:
         Insert competeny with its name and body into the db
 
         Parameters:
-        competencyName: Competency name as string
-        competencyBody: Competency body as string
+            competencyName: Competency name as string
+            competencyBody: Competency body as string
 
         Raises: CompetencyInsertionFailed if insertion into DB failed
 
@@ -56,8 +56,18 @@ class GraphDatabaseConnection:
         """
         with self.driver.session() as session:
             competency = session.write_transaction(
+                self._retrieve_competency_by_name,
+                competencyName,
+            )
+        if competency:
+            raise CompetencyInsertionFailed(
+                f"Competancy with name '{competencyName}' already exists"
+            )
+
+        with self.driver.session() as session:
+            competency = session.write_transaction(
                 self._create_competency_transaction,
-                competecyName,
+                competencyName,
                 competencyBody,
             )
             return competency
@@ -87,8 +97,8 @@ class GraphDatabaseConnection:
         Insert competeny with its name and body into the db
 
         Parameters:
-        courseName: course name as string
-        courseBody: course body as string
+            courseName: course name as string
+            courseBody: course body as string
 
         Raises: CourseInsertionFailed if insertion into DB failed
 
@@ -96,6 +106,15 @@ class GraphDatabaseConnection:
         course name and node as string
 
         """
+        with self.driver.session() as session:
+            course = session.write_transaction(
+                self._retrieve_course_by_name, courseName
+            )
+        if course:
+            raise CourseInsertionFailed(
+                f"Course with name '{courseName}' already exists"
+            )
+
         with self.driver.session() as session:
             course = session.write_transaction(
                 self._create_course_transaction, courseName, courseBody
@@ -126,7 +145,7 @@ class GraphDatabaseConnection:
 
         Queries all nodes from the DB with the label course
 
-        Raises: RetrieveCoursesFailed if retrieving courses failed
+        Raises: RetrievingCourseFailed if retrieving courses failed
 
         Returns:
         List of courses as dict
@@ -146,6 +165,9 @@ class GraphDatabaseConnection:
         except ClientError as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
 
+        if not result.data():
+            return None
+
         courses = [
             {
                 "id": c["result"][0],
@@ -162,7 +184,7 @@ class GraphDatabaseConnection:
 
         Queries all nodes from the DB with the label competency
 
-        Raises: RetrieveCompetencyFailed if retrieving competencies failed
+        Raises: RetrievingCompetencyFailed if retrieving competencies failed
 
         Returns:
         List of competencies as dict
@@ -186,6 +208,9 @@ class GraphDatabaseConnection:
                 f"{query} raised an error: \n {e}"
             )
 
+        if not result:
+            return None
+
         competencies = [
             {
                 "id": c["result"][0],
@@ -195,3 +220,81 @@ class GraphDatabaseConnection:
             for c in result.data()
         ]
         return competencies
+
+    @staticmethod
+    def _retrieve_competency_by_name(tx, competencyName) -> Optional[Dict]:
+        query = "MATCH (c:Competency) WHERE c.name=$name RETURN [id(c), c.name, c.body] AS result"
+        try:
+            result = tx.run(query, name=competencyName)
+        except ClientError as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
+        if not result:
+            return None
+        result = result.single()
+        if not result:
+            return None
+        result = result["result"]
+        competency = {"id": result[0], "name": result[1], "body": result[2]}
+
+        return competency
+
+    def retrieve_competency_by_name(self, competencyName) -> Optional[Dict]:
+        """
+        Retrieve competency by name
+
+        Query nodes with label Competency that have name competencyName
+
+        Parameters:
+            competencyName: competency name as string
+
+        Raises:
+            RetrievingCompetencyFailed if retrieving competency failed
+
+        Returns:
+            Competency as dict or None
+        """
+        with self.driver.session() as session:
+            competency = session.write_transaction(
+                self._retrieve_competency_by_name, competencyName
+            )
+            return competency
+
+    @staticmethod
+    def _retrieve_course_by_name(tx, courseName) -> Optional[Dict]:
+        query = "MATCH (c:Course) WHERE c.name=$name RETURN [id(c), c.name, c.body] AS result"
+        try:
+            result = tx.run(query, name=courseName)
+        except ClientError as e:
+            raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
+        if not result:
+            return None
+        result = result.single()
+        if not result:
+            return None
+        result = result["result"]
+        course = {"id": result[0], "name": result[1], "body": result[2]}
+
+        return course
+
+    def retrieve_course_by_name(self, courseName) -> Optional[Dict]:
+        """
+        Retrieve course by name
+
+        Query nodes with label Course that have name courseName
+
+        Parameters:
+            courseName: course name as string
+
+        Raises:
+            RetrievingCourseFailed if retrieving course failed
+
+        Returns:
+            Course as dict or None
+        """
+        with self.driver.session() as session:
+            competency = session.write_transaction(
+                self._retrieve_course_by_name, courseName
+            )
+            return competency
