@@ -14,6 +14,8 @@ tags:
     url: "https://esco.ec.europa.eu/en/classification/skill?uri=http%3A%2F%2Fdata.europa.eu%2Fesco%2Fskill%2FA1.1.0"
 - name: course
   description: Add and query courses
+- name: relation
+  description: Add relationships between courses and competencies
 paths:
   /competency/{competencyName}:
     post:
@@ -111,6 +113,29 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Competency'
+  /courseCompetency:
+    post:
+      tags:
+      - relation
+      summary: Add a new course and competency relationship
+      description: Add a new course and competency relationship
+      operationId: addCourseCompetency
+      responses:
+        '400':
+          description: Invalid input
+        '200':
+          description: Course competency relationship was added successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseCompetency'
+      requestBody:
+        description: Add a new course
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCompetencyWithoutId'
 components:
   schemas:
     Course:
@@ -128,4 +153,28 @@ components:
         name:
           type: string
         body:
+          type: string
+    CourseCompetency:
+      properties:
+        course_id:
+          type: integer
+        course_name:
+          type: string
+        course_body:
+          type: string
+        competency_id:
+          type: integer
+        competency_name:
+          type: string
+        competency_body:
+          type: string
+    CourseCompetencyWithoutId:
+      properties:
+        course_name:
+          type: string
+        course_body:
+          type: string
+        competency_name:
+          type: string
+        competency_body:
           type: string

@@ -21,6 +21,10 @@ var spec = {
     {
       "name": "course",
       "description": "Add and query courses"
+    },
+    {
+      "name": "relation",
+      "description": "Add relationships between courses and competencies"
     }
   ],
   "paths": {
@@ -173,6 +177,42 @@ var spec = {
           }
         }
       }
+    },
+    "/courseCompetency": {
+      "post": {
+        "tags": [
+          "relation"
+        ],
+        "summary": "Add a new course and competency relationship",
+        "description": "Add a new course and competency relationship",
+        "operationId": "addCourseCompetency",
+        "responses": {
+          "200": {
+            "description": "Course competency relationship was added successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseCompetency"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        },
+        "requestBody": {
+          "description": "Add a new course",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseCompetencyWithoutId"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -199,6 +239,44 @@ var spec = {
             "type": "string"
           },
           "body": {
+            "type": "string"
+          }
+        }
+      },
+      "CourseCompetency": {
+        "properties": {
+          "course_id": {
+            "type": "integer"
+          },
+          "course_name": {
+            "type": "string"
+          },
+          "course_body": {
+            "type": "string"
+          },
+          "competency_id": {
+            "type": "integer"
+          },
+          "competency_name": {
+            "type": "string"
+          },
+          "competency_body": {
+            "type": "string"
+          }
+        }
+      },
+      "CourseCompetencyWithoutId": {
+        "properties": {
+          "course_name": {
+            "type": "string"
+          },
+          "course_body": {
+            "type": "string"
+          },
+          "competency_name": {
+            "type": "string"
+          },
+          "competency_body": {
             "type": "string"
           }
         }

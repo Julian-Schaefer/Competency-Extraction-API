@@ -5,6 +5,7 @@ from app.db import (
     CourseInsertionFailed,
     RetrievingCourseFailed,
     RetrievingCompetencyFailed,
+    CompetencyAndCourseInsertionFailed,
 )
 
 app = Flask(__name__)
@@ -39,7 +40,7 @@ def create_course(course_name: str):
         return Response(f"error: {e}", status=400, mimetype="application/json")
     db.close()
 
-    return f"Course: {course}"
+    return jsonify(course)
 
 
 @app.route("/courses", methods=["GET", "HEAD"])
@@ -93,4 +94,44 @@ def create_competency(competency_name):
         return Response(f"error: {e}", status=400, mimetype="application/json")
     db.close()
 
-    return f"Competency: {competency}"
+    return jsonify(competency)
+
+
+@app.route("/courseCompetency", methods=["POST"])
+def create_competency_course_link():
+    if request.headers.get("Content-Type") != "application/json":
+        return Response(
+            "Content-Type not supported! Expected type application/json",
+            status=400,
+            mimetype="application/json",
+        )
+    competency_name = json.loads(request.data).get("competency_name")
+    competency_body = json.loads(request.data).get("competency_body")
+    course_name = json.loads(request.data).get("course_name")
+    course_body = json.loads(request.data).get("course_body")
+
+    if (
+        not competency_name
+        or not competency_body
+        or not course_name
+        or not course_body
+    ):
+        return Response(
+            "Body is incomplete, make sure to include 'competency_name', 'competency_body', 'course_name' and 'course_body'",
+            status=400,
+            mimetype="application/json",
+        )
+
+    db = GraphDatabaseConnection()
+    try:
+        competency_and_course = db.create_competecy_course_connection(
+            course_name,
+            course_body,
+            competency_name,
+            competency_body,
+        )
+    except CompetencyAndCourseInsertionFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
+    db.close()
+
+    return jsonify(competency_and_course)
