@@ -333,6 +333,23 @@ class GraphDatabaseConnection:
     def insert_course_with_nonexisting_competency(
         self, competencyName, competencyBody, courseName, courseBody
     ) -> Dict:
+        """
+        Insert course with nonexisting competency
+
+        Create a new course and HAS relationship to a new competency
+
+        Parameters:
+            competencyName: competency name as string
+            competencyBody: competency body as string
+            courseName: course name as string
+            courseBody: course body as string
+
+        Raises:
+            CompetencyAndCourseInsertionFailed if creating failed
+
+        Returns:
+            Course and competency as dict
+        """
         with self.driver.session() as session:
             competency_and_course = session.write_transaction(
                 self._insert_course_with_nonexisting_competency,
@@ -378,6 +395,21 @@ class GraphDatabaseConnection:
     def insert_course_with_existing_competency(
         self, competencyId, courseName, courseBody
     ) -> Dict:
+        """Insert course with existing competency
+
+        Create a new course and HAS relationship to an existing competency
+
+        Parameters:
+            competencyId: id of the existing competency
+            courseName: course name as string
+            courseBody: course body as string
+
+        Raises:
+            CompetencyAndCourseInsertionFailed if creating failed
+
+        Returns:
+            Course and competency as dict
+        """
         with self.driver.session() as session:
             competency_and_course = session.write_transaction(
                 self._insert_course_with_existing_competency,
@@ -387,27 +419,214 @@ class GraphDatabaseConnection:
             )
             return competency_and_course
 
+    @staticmethod
+    def _insert_competency_with_existing_course(
+        tx, competencyName, competencyBody, courseId
+    ) -> Dict:
+        query = "MATCH (cou:Course) WHERE id(cou)=$courseId CREATE (cou)-[r:HAS]->(com:Competency {name:$competencyName, body:$competencyBody}) RETURN [id(cou), cou.name, cou.body, id(com), com.name, com.body] AS result"
+        try:
+            result = tx.run(
+                query,
+                courseId=courseId,
+                competencyName=competencyName,
+                competencyBody=competencyBody,
+            )
+        except ClientError as e:
+            raise CompetencyAndCourseInsertionFailed(
+                f"{query} raised an error: \n {e}"
+            )
+        if not result:
+            return None
+        result = result.single()
+        if not result:
+            return None
+        result = result["result"]
+        course_and_competency = {
+            "course_id": result[0],
+            "course_name": result[1],
+            "course_body": result[2],
+            "competency_id": result[3],
+            "competency_name": result[4],
+            "competency_body": result[5],
+        }
+        return course_and_competency
+
+    def insert_competency_with_existing_course(
+        self, competencyName, competencyBody, courseId
+    ) -> Dict:
+        """Insert competency with existing course
+
+        Create a new competency and HAS relationship from an existing course
+
+        Parameters:
+            competencyName: competency name as string
+            competencyBody: competency body as string
+            courseId: id of the existing course
+
+        Raises:
+            CompetencyAndCourseInsertionFailed if creating failed
+
+        Returns:
+            Course and competency as dict
+        """
+        with self.driver.session() as session:
+            competency_and_course = session.write_transaction(
+                self._insert_competency_with_existing_course,
+                competencyName,
+                competencyBody,
+                courseId,
+            )
+            return competency_and_course
+
+    @staticmethod
+    def _retrieve_existing_relationship(tx, competencyId, courseId) -> Dict:
+        query = "MATCH (cou:Course), (com: Competency) WHERE id(cou)=$courseId AND id(com)=$competencyId AND (cou)-[:HAS]->(com) RETURN [id(cou), cou.name, cou.body, id(com), com.name, com.body] AS result"
+        try:
+            result = tx.run(
+                query,
+                competencyId=competencyId,
+                courseId=courseId,
+            )
+        except ClientError as e:
+            raise CompetencyAndCourseInsertionFailed(
+                f"{query} raised an error: \n {e}"
+            )
+
+        if not result:
+            return None
+        result = result.single()
+        if not result:
+            return None
+        result = result["result"]
+        course_and_competency = {
+            "course_id": result[0],
+            "course_name": result[1],
+            "course_body": result[2],
+            "competency_id": result[3],
+            "competency_name": result[4],
+            "competency_body": result[5],
+        }
+        return course_and_competency
+
+    def retrieve_existing_relationship(
+        self, courseId, competencyId
+    ) -> List[Optional[Dict]]:
+        """Retrieve existing relationship
+
+        Retrieve HAS relationship between given competency and course
+
+        Parameters:
+            competencyId: Id of the existing competency
+            courseId: id of the existing course
+
+        Raises:
+            CompetencyAndCourseInsertionFailed if creating failed
+
+        Returns:
+            Course and competency as dict
+        """
+        with self.driver.session() as session:
+            relationship = session.write_transaction(
+                self._retrieve_existing_relationship,
+                competencyId,
+                courseId,
+            )
+            return relationship
+
+    @staticmethod
+    def _insert_relationship_for_existing(tx, competencyId, courseId) -> Dict:
+        query = "MATCH (cou:Course) WHERE id(cou)=$courseId MATCH (com:Competency) WHERE id(com)=$competencyId CREATE (cou)-[r:HAS]->(com) RETURN [id(cou), cou.name, cou.body, id(com), com.name, com.body] AS result"
+        try:
+            result = tx.run(
+                query,
+                competencyId=competencyId,
+                courseId=courseId,
+            )
+        except ClientError as e:
+            raise CompetencyAndCourseInsertionFailed(
+                f"{query} raised an error: \n {e}"
+            )
+
+        if not result:
+            return None
+        result = result.single()
+        if not result:
+            return None
+        result = result["result"]
+        course_and_competency = {
+            "course_id": result[0],
+            "course_name": result[1],
+            "course_body": result[2],
+            "competency_id": result[3],
+            "competency_name": result[4],
+            "competency_body": result[5],
+        }
+        return course_and_competency
+
+    def insert_relationship_for_existing(self, competencyId, courseId) -> Dict:
+        """Insert relationship for existing
+
+        Create a new HAS relationship between existing course and competency
+
+        Parameters:
+            competencyId: Id of existing competency
+            courseId: id of the existing course
+
+        Raises:
+            CompetencyAndCourseInsertionFailed if creating failed
+
+        Returns:
+            Course and competency as dict
+        """
+        if self.retrieve_existing_relationship(courseId, competencyId):
+            raise CompetencyAndCourseInsertionFailed(
+                f"Competency {competencyId} and course {courseId} already have a relationship."
+            )
+        with self.driver.session() as session:
+            competency_and_course = session.write_transaction(
+                self._insert_relationship_for_existing,
+                competencyId,
+                courseId,
+            )
+            return competency_and_course
+
     def create_competecy_course_connection(
         self, courseName, courseBody, competencyName, competecyBody
     ) -> Dict:
+        """Create competency course connection
+
+        Create a new HAS relationship between course and competency avoiding duplicates
+
+        Parameters:
+            competencyName: competency name as string
+            competencyBody: competency body as string
+            courseName: course name as string
+            courseBody: course body as string
+
+        Raises:
+            CompetencyAndCourseInsertionFailed if creating failed
+
+        Returns:
+            Course and competency as dict
+        """
         existing_competency = self.retrieve_competency_by_name(competencyName)
         existing_course = self.retrieve_course_by_name(courseName)
 
         if existing_course and existing_competency:
-            raise CompetencyAndCourseInsertionFailed(
-                f"Competency '{competencyName}' and course '{courseName}' already exist."
+            return self.insert_relationship_for_existing(
+                existing_competency.get("id"), existing_course.get("id")
             )
 
-        if existing_course:
-            raise CompetencyAndCourseInsertionFailed(
-                f"Course '{courseName}' already exists."
+        if existing_course and not existing_competency:
+            return self.insert_competency_with_existing_course(
+                competencyName, competecyBody, existing_course.get("id")
+            )
+        if not existing_course and existing_competency:
+            return self.insert_course_with_existing_competency(
+                existing_competency["id"], courseName, courseBody
             )
 
-        if not existing_competency:
-            return self.insert_course_with_nonexisting_competency(
-                competencyName, competecyBody, courseName, courseBody
-            )
-
-        return self.insert_course_with_existing_competency(
-            existing_competency["id"], courseName, courseBody
+        # competency and course both don't exist yet
+        return self.insert_course_with_nonexisting_competency(
+            competencyName, competecyBody, courseName, courseBody
         )

@@ -46,7 +46,7 @@ paths:
         content:
           application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/CompetencyBody'
   /course/{courseName}:
     post:
       tags:
@@ -76,7 +76,7 @@ paths:
         content:
           application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/CourseBody'
   /courses:
     get:
       tags:
@@ -136,6 +136,37 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CourseCompetencyWithoutId'
+  /course/{courseName}/extract:
+    post:
+      tags:
+      - course
+      - relation
+      summary: Add a new course and extract its competencies
+      description: Add a new course and extract its competencies and insert them into the db
+      operationId: addCourseExtract
+      parameters:
+      - in: path
+        name: courseName
+        description: Name of course to be added
+        required: true
+        schema:
+          type: string
+      responses:
+        '400':
+          description: Invalid input
+        '200':
+          description: Course was added successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseCompetency'
+      requestBody:
+        description: Add a new course and extract competencies
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseBody'
 components:
   schemas:
     Course:
@@ -145,6 +176,14 @@ components:
         name:
           type: string
         body:
+          type: string
+    CourseBody:
+      properties:
+        course_body:
+          type: string
+    CompetencyBody:
+      properties:
+        competency_body:
           type: string
     Competency:
       properties:

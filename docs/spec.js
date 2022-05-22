@@ -68,7 +68,7 @@ var spec = {
           "content": {
             "application/json": {
               "schema": {
-                "type": "string"
+                "$ref": "#/components/schemas/CompetencyBody"
               }
             }
           }
@@ -115,7 +115,7 @@ var spec = {
           "content": {
             "application/json": {
               "schema": {
-                "type": "string"
+                "$ref": "#/components/schemas/CourseBody"
               }
             }
           }
@@ -213,6 +213,54 @@ var spec = {
           }
         }
       }
+    },
+    "/course/{courseName}/extract": {
+      "post": {
+        "tags": [
+          "course",
+          "relation"
+        ],
+        "summary": "Add a new course and extract its competencies",
+        "description": "Add a new course and extract its competencies and insert them into the db",
+        "operationId": "addCourseExtract",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "courseName",
+            "description": "Name of course to be added",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course was added successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseCompetency"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        },
+        "requestBody": {
+          "description": "Add a new course and extract competencies",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseBody"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -226,6 +274,20 @@ var spec = {
             "type": "string"
           },
           "body": {
+            "type": "string"
+          }
+        }
+      },
+      "CourseBody": {
+        "properties": {
+          "course_body": {
+            "type": "string"
+          }
+        }
+      },
+      "CompetencyBody": {
+        "properties": {
+          "competency_body": {
             "type": "string"
           }
         }

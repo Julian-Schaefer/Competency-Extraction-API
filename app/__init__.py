@@ -7,6 +7,7 @@ from app.db import (
     RetrievingCompetencyFailed,
     CompetencyAndCourseInsertionFailed,
 )
+from app.competency_extractors.competency_extractor import DummyExtractor
 
 app = Flask(__name__)
 
@@ -135,3 +136,46 @@ def create_competency_course_link():
     db.close()
 
     return jsonify(competency_and_course)
+
+
+@app.route("/course/<string:course_name>/extract", methods=["POST"])
+def create_course_with_extraction(course_name: str):
+    if request.headers.get("Content-Type") != "application/json":
+        return Response(
+            "Content-Type not supported! Expected type application/json",
+            status=400,
+            mimetype="application/json",
+        )
+    course_body = json.loads(request.data).get("course_body")
+
+    if not course_body:
+        return Response(
+            "Body 'course_body' is missing",
+            status=400,
+            mimetype="application/json",
+        )
+
+    db = GraphDatabaseConnection()
+    extractor = DummyExtractor()
+    competencies = extractor.extract_competencies(course_body)
+
+    created_links = []
+
+    for competency in competencies:
+        competency_name = competency.get("name")
+        competency_body = competency.get("body")
+
+        try:
+            competency_and_course = db.create_competecy_course_connection(
+                course_name,
+                course_body,
+                competency_name,
+                competency_body,
+            )
+        except CompetencyAndCourseInsertionFailed:
+            continue
+        created_links.append(competency_and_course)
+
+    db.close()
+
+    return jsonify(created_links)
