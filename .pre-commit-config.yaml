@@ -8,4 +8,9 @@ repos:
     rev: 3.9.2
     hooks:
     - id: flake8
+-   repo: https://github.com/APIDevTools/swagger-cli
+    rev: v4.0.4
+    hooks:
+    - id: swagger-validation
+      args: ["validate", "docs/api_spec_swagger.yml"]
 
