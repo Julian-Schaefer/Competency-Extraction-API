@@ -2,10 +2,11 @@ import pandas as pd
 import spacy
 import nltk
 from nltk.corpus import wordnet
-from HanTa import HanoverTagger as ht
+from HanTa import HanoverTagger as Ht
+import os
 
 
-nltk.data.path.append(r".\lemma_cache_data\nltk_data")
+__data_path__ = os.path.dirname(__file__) + r"\lemma_cache_data"
 
 
 def get_wordnet_pos(treebank_tag):
@@ -34,10 +35,10 @@ def split_into_sentences_and_tokenize(text, language):
 
 class LemmatizerGerman:
     def __init__(self):
-        self.morphys = pd.read_csv(r"lemma_cache_data\morphys.csv", encoding="utf-8", index_col=0)
+        self.morphys = pd.read_csv(__data_path__ + r"\morphys.csv", encoding="utf-8", index_col=0)
         self.nlp = spacy.load("de_core_news_sm", disable=['ner'])
         self.language = "german"
-        self.hannover_tagger = ht.HanoverTagger(r".\lemma_cache_data\morphmodel_ger.pgz")
+        self.hannover_tagger = Ht.HanoverTagger(__data_path__ + r"\morphmodel_ger.pgz")
 
     def lemmatize_morphys(self, text):
         lemmatized_tokenized_text = []
@@ -78,6 +79,7 @@ class LemmatizerEnglish:
     def __init__(self):
         self.nlp = spacy.load("en_core_web_sm", disable=['ner'])
         self.language = "english"
+        nltk.data.path.append(__data_path__ + r"\nltk_data")
         self.nltk_lemmatizer = nltk.stem.WordNetLemmatizer()
 
     def lemmatize_spacy(self, text):
