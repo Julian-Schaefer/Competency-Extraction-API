@@ -26,4 +26,8 @@ def test_store_check_sequence_existing():
     result = store_instance.check_sequence(
         "Prioritäten im Zusammenhang mit der Rohrleitungsintegrität weiterverfolgen"
     )
+    for key in result[0].keys():
+        print(key, " --------- ", result[0][key])
     assert len(result) == 1
+
+test_store_check_sequence_existing()

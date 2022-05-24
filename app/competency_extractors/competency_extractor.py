@@ -1,4 +1,8 @@
 from typing import List, Optional, Dict
+from app import lemmaCache
+from app import store
+from itertools import groupby
+from typing import List, Tuple, Dict
 
 
 class CompetencyExtractorInterface:
@@ -27,3 +31,65 @@ class DummyExtractor(CompetencyExtractorInterface):
             {"name": c, "body": f"some description of {c}"}
             for c in course_body.split()
         ]
+
+
+class Dummy2Extractor(CompetencyExtractorInterface):
+
+    def __init__(self):
+        self.lemmatizer_de = lemmaCache.LemmatizerGerman()
+        self.store = store.Store()
+
+    def extract_sequences_from_sentence(self, sentence):
+        is_in_term_store = []
+        for token in sentence:
+            if self.store.check_term(token):
+                is_in_term_store.append(token)
+            else:
+                is_in_term_store.append(None)
+        sequences = (list(g) for _, g in groupby(is_in_term_store, key=None.__ne__))
+        print([x for x in sequences if x != [None]])
+        return [x for x in sequences if x != [None]]
+
+    def extract_competencies_from_sentence(self, sentence):
+        return self.extract_sequences_from_sentence(sentence)
+
+    def extract_competencies(self, course_body: str) -> List[Optional[Dict]]:
+        # lemmatize course
+        course_body = self.lemmatizer_de.lemmatize_hannover(course_body)
+        # Loop over sentences
+        for sentence in course_body:
+            self.extract_competencies_from_sentence(sentence)
+
+
+class Dummy3Extractor(CompetencyExtractorInterface):
+
+    def __init__(self):
+        self.lemmatizer_de = lemmaCache.LemmatizerGerman()
+        self.store = store.Store()
+
+    def extract_competencies_from_sentence(self, sentence):
+        p = 0
+        at = ""
+        a = []
+        for token in sentence:
+            p += 1
+
+
+
+
+
+    def extract_competencies(self, course_body: str) -> List[Optional[Dict]]:
+        # lemmatize course
+        course_body = self.lemmatizer_de.lemmatize_hannover(course_body)
+        # Loop over sentences
+        for sentence in course_body:
+            self.extract_competencies_from_sentence(sentence)
+
+
+
+
+example = "Die Weiterentwicklung der Pflegequalität beginnt bei denen, die zeigen wie es geht. Mit der Qualifikation als Praxisanleiter/-in in der Pflege leisten Sie ein großes Stück Zukunftsarbeit, denn Sie sind diejenigen, die für kompetenten Fachkräfte-Nachwuchs sorgen."
+extr = Dummy2Extractor()
+
+extr.extract_competencies(example)
+
