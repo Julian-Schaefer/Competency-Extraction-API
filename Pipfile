@@ -9,6 +9,11 @@ pre-commit = "*"
 gunicorn = "*"
 neo4j = "*"
 requests = "*"
+pandas = "*"
+spacy = "*"
+wheel = "*"
+nltk = "*"
+hanta = "*"
 
 [dev-packages]
 black = "*"
