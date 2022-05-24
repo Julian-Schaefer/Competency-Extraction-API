@@ -8,6 +8,11 @@ flask = "*"
 pre-commit = "*"
 gunicorn = "*"
 neo4j = "*"
+pandas = "*"
+spacy = "*"
+wheel = "*"
+nltk = "*"
+hanta = "*"
 
 [dev-packages]
 
