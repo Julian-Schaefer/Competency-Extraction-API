@@ -88,8 +88,3 @@ class Dummy3Extractor(CompetencyExtractorInterface):
 
 
 
-example = "Die Weiterentwicklung der Pflegequalität beginnt bei denen, die zeigen wie es geht. Mit der Qualifikation als Praxisanleiter/-in in der Pflege leisten Sie ein großes Stück Zukunftsarbeit, denn Sie sind diejenigen, die für kompetenten Fachkräfte-Nachwuchs sorgen."
-extr = Dummy2Extractor()
-
-extr.extract_competencies(example)
-

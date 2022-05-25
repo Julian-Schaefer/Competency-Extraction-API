@@ -1,22 +1,93 @@
+import string
 import pandas as pd
 import spacy
 import nltk
 from nltk.corpus import wordnet
 from HanTa import HanoverTagger as Ht
 import os
+from typing import List
 
 
 __data_path__ = os.path.dirname(__file__) + r"\lemma_cache_data"
 
 
-def split_into_sentences(text, language):
-    return nltk.sent_tokenize(text, language=language)
+def add_nltk_data_path():
+    """
+    Adds the directory ".\app\nltk_data" to the list of paths that the nltk library searches in for valid nltk models.
+    """
+    if not __data_path__ + r"\nltk_data" in nltk.data.path:
+        nltk.data.path.append(__data_path__ + r"\nltk_data")
 
 
-def split_into_sentences_and_tokenize(text, language):
-    sentences = nltk.sent_tokenize(text, language=language)
+def split_course_descr_into_sentences(course_descr: str, language: str) -> List[str]:
+    """
+    Splits a course description into sentences using the nltk Punkt Sentence Tokenizer.
+    :param course_descr: A course description
+    :type course_descr: str
+    :param language: The language of the course description; "english" or "german"
+    :type language: str
+    :return: A list of sentences
+    :rtype: List[str]
+    """
+    add_nltk_data_path()
+    return nltk.sent_tokenize(course_descr, language=language)
+
+
+def tokenize_sentences(sentences: List[str], language: str) -> List[List[str]]:
+    """
+    Tokenizes a list of sentences using the nltk Tokenizer.
+    :param sentences: A list of sentences
+    :type sentences: List[str]
+    :param language: The language of the sentences; "english" or "german"
+    :return: A list of tokenized sentences
+    :rtype: List[List[str]]
+    """
+    add_nltk_data_path()
     tokenized_text = [nltk.word_tokenize(sentence[:-1], language=language) for sentence in sentences]
     return tokenized_text
+
+
+def remove_punctuation_from_tokenized_sentences(tokenized_sentences: List[List[str]]) -> List[List[str]]:
+    """
+    Removes punctuation from a list of tokenized sentences. If a token only contains punctuation,
+    it is removed entirely. Hyphens are only removed if the appear at the start or the end of the token.
+    For example the hyphen in the token "H-Milch" will not be removed.
+    :param tokenized_sentences: A list of tokenized sentences
+    :type tokenized_sentences: List[List[str]]
+    :return: The list of tokenized sentences with punctuation removed
+    :rtype: List[List[str]]
+    """
+    tokenized_sentences_without_punctuation = []
+    punct = string.punctuation.replace("-", "")
+    # remove punctuation except for hyphens
+    for sentence in tokenized_sentences:
+        tokenized_sentences_without_punctuation.append(
+            [token.translate(str.maketrans('', '', punct)) for token in sentence
+             if token.translate(str.maketrans('', '', punct)) != ""]
+        )
+    # remove hyphens that appear at the start or the end of the token
+    tokenized_sentences_without_punctuation_and_hyphens = []
+    for sentence in tokenized_sentences_without_punctuation:
+        tokenized_sentences_without_punctuation_and_hyphens.append(
+            [token.strip("-") for token in sentence if token.strip("-") != ""]
+        )
+    return tokenized_sentences_without_punctuation_and_hyphens
+
+
+def remove_numeric_tokens(tokenized_sentences: List[List[str]]) -> List[List[str]]:
+    """
+    Removes numeric tokens from a list of tokenized sentences.
+    :param tokenized_sentences: A list of tokenized sentences
+    :type tokenized_sentences: List[List[str]]
+    :return: The list of tokenized sentences with numeric tokens removed
+    :rtype: List[List[str]]
+    """
+    tokenized_sentences_without_numeric_tokens = []
+    for sentence in tokenized_sentences:
+        tokenized_sentences_without_numeric_tokens.append(
+            [token for token in sentence if not token.isnumeric()]
+        )
+    return tokenized_sentences_without_numeric_tokens
 
 
 def lowercase_course_descr(course_descr: str):
@@ -31,7 +102,7 @@ def lowercase_course_descr(course_descr: str):
 
 class LemmatizerGerman:
     def __init__(self):
-        nltk.data.path.append(__data_path__ + r"\nltk_data")
+        add_nltk_data_path()
         self.morphys = pd.read_csv(__data_path__ + r"\morphys.csv", encoding="utf-8", index_col=0)
         self.nlp = spacy.load("de_core_news_sm", disable=['ner'])
         self.language = "german"
@@ -39,13 +110,26 @@ class LemmatizerGerman:
         with open(__data_path__ + r"\stopwords-de.txt", "r", encoding="utf-8") as f:
             self.stopwords = list(map(str.strip, list(f)))
 
-    def remove_stopwords_from_course_descr(self, course_descr):
-        pass
+    def remove_stopwords_from_tokenized_sentences(self, tokenized_sentences: List[List[str]]):
+        """
+        Remove stop words from a list of tokenized sentences.
+        Each token is iterated through and removed if it exists in the list of stopwords.
+        The look up algorithm is not case sensitive. If a stopword appears in upper case, it will still be removed.
+        :param tokenized_sentences: A list of tokenized sentences
+        :type tokenized_sentences: List[List[str]]
+        :return: The list of tokenized sentences without stopwords
+        :rtype: List[List[str]]
+        """
+        tokenized_sentences_without_stopwords = []
+        for sentence in tokenized_sentences:
+            tokenized_sentences_without_stopwords.append(
+                [token for token in sentence if token.lower() not in self.stopwords]
+            )
+        return tokenized_sentences_without_stopwords
 
-    def lemmatize_morphys(self, text):
-        lemmatized_tokenized_text = []
-        tokenized_sentences = split_into_sentences_and_tokenize(text, self.language)
-
+    def lemmatize_morphys(self, tokenized_sentences):
+        df = self.morphys
+        lemmatized_tokenized_sentences = []
         # loop over each tokenized sentence
         for sent in tokenized_sentences:
             lemmatized_sentence = []
@@ -53,24 +137,23 @@ class LemmatizerGerman:
             # loop over each token in the sentence
             for token in sent:
                 try:
-                    lemma = self.morphys.loc[token]["lemma"]
-                except KeyError:
+                    lemma = df[df["form"] == token]["lemma"].tolist()[0]
+                except IndexError:
                     lemma = token
                 lemmatized_sentence.append(lemma)
 
-            lemmatized_tokenized_text.append(lemmatized_sentence)
-        return lemmatized_tokenized_text
+            lemmatized_tokenized_sentences.append(lemmatized_sentence)
+        return lemmatized_tokenized_sentences
 
-    def lemmatize_spacy(self, text):
-        sentences = split_into_sentences(text, language=self.language)
+    def lemmatize_spacy(self, tokenized_sentences):
         lemmatized_sentences = []
-        for doc in self.nlp.pipe(sentences):
-            lemmatized_sentences.append([token.lemma_ for token in doc[:-1]])
-
+        for sentence in tokenized_sentences:
+            lemmatized_sentences.append(
+                [self.nlp(token)[0].lemma_ for token in sentence]
+            )
         return lemmatized_sentences
 
-    def lemmatize_hannover(self, text):
-        tokenized_sentences = split_into_sentences_and_tokenize(text, language=self.language)
+    def lemmatize_hannover(self, tokenized_sentences):
         lemmatized_sentences = []
         for sent in tokenized_sentences:
             lemmatized_sentences.append([x for _, x, _ in self.hannover_tagger.tag_sent(sent, taglevel=1)])
@@ -79,20 +162,21 @@ class LemmatizerGerman:
 
 class LemmatizerEnglish:
     def __init__(self):
+        add_nltk_data_path()
         self.nlp = spacy.load("en_core_web_sm", disable=['ner'])
         self.language = "english"
-        nltk.data.path.append(__data_path__ + r"\nltk_data")
         self.nltk_lemmatizer = nltk.stem.WordNetLemmatizer()
 
     def lemmatize_spacy(self, text):
-        sentences = split_into_sentences(text, language=self.language)
+        sentences = split_course_descr_into_sentences(text, language=self.language)
         lemmatized_sentences = []
         for doc in self.nlp.pipe(sentences):
             lemmatized_sentences.append([token.lemma_ for token in doc[:-1]])
         return lemmatized_sentences
 
     def lemmatize_nltk(self, text):
-        tokenized_sentences = split_into_sentences_and_tokenize(text, self.language)
+        sentences = split_course_descr_into_sentences(text, self.language)
+        tokenized_sentences = tokenize_sentences(sentences, self.language)
         lemmatized_sentences = []
         for sentence in tokenized_sentences:
             lemmatized_sentence = []
@@ -113,9 +197,4 @@ class LemmatizerEnglish:
                 lemmatized_sentence.append(self.nltk_lemmatizer.lemmatize(token, tag))
             lemmatized_sentences.append(lemmatized_sentence)
         return lemmatized_sentences
-
-
-# lemmazier_de = LemmatizerGerman()
-# print(lemmazier_de.lemmatize_morphys("Hallo mein Name ist Amir. ich komme aus Berlin und war heute essen"))
-
 
