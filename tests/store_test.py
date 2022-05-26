@@ -1,6 +1,11 @@
 from app.store import Store
 
 
+def test_initialize():
+    store_instance = Store()
+    store_instance.initialize()
+
+
 def test_store_check_term_non_existing():
     store_instance = Store()
     result = store_instance.check_term("nichtexistierendeswort")

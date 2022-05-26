@@ -11,13 +11,13 @@ __data_path__ = os.path.dirname(__file__) + r"\lemma_cache_data"
 
 def get_wordnet_pos(treebank_tag):
 
-    if treebank_tag.startswith('J'):
+    if treebank_tag.startswith("J"):
         return wordnet.ADJ
-    elif treebank_tag.startswith('V'):
+    elif treebank_tag.startswith("V"):
         return wordnet.VERB
-    elif treebank_tag.startswith('N'):
+    elif treebank_tag.startswith("N"):
         return wordnet.NOUN
-    elif treebank_tag.startswith('R'):
+    elif treebank_tag.startswith("R"):
         return wordnet.ADV
     else:
         return "n"
@@ -29,20 +29,33 @@ def split_into_sentences(text, language):
 
 def split_into_sentences_and_tokenize(text, language):
     sentences = nltk.sent_tokenize(text, language=language)
-    tokenized_text = [nltk.word_tokenize(sentence[:-1], language=language) for sentence in sentences]
+    tokenized_text = [
+        nltk.word_tokenize(sentence[:-1], language=language)
+        for sentence in sentences
+    ]
     return tokenized_text
 
 
 class LemmatizerGerman:
     def __init__(self):
-        self.morphys = pd.read_csv(__data_path__ + r"\morphys.csv", encoding="utf-8", index_col=0)
-        self.nlp = spacy.load("de_core_news_sm", disable=['ner'])
+        self.nlp = spacy.load("de_core_news_sm", disable=["ner"])
         self.language = "german"
-        self.hannover_tagger = Ht.HanoverTagger(__data_path__ + r"\morphmodel_ger.pgz")
+
+        try:
+            self.morphys = pd.read_csv(
+                __data_path__ + r"\morphys.csv", encoding="utf-8", index_col=0
+            )
+            self.hannover_tagger = Ht.HanoverTagger(
+                __data_path__ + r"\morphmodel_ger.pgz"
+            )
+        except FileNotFoundError:
+            print("File not found: ignoring...")
 
     def lemmatize_morphys(self, text):
         lemmatized_tokenized_text = []
-        tokenized_sentences = split_into_sentences_and_tokenize(text, self.language)
+        tokenized_sentences = split_into_sentences_and_tokenize(
+            text, self.language
+        )
 
         # loop over each tokenized sentence
         for sent in tokenized_sentences:
@@ -63,24 +76,38 @@ class LemmatizerGerman:
         sentences = split_into_sentences(text, language=self.language)
         lemmatized_sentences = []
         for doc in self.nlp.pipe(sentences):
-            lemmatized_sentences.append([token.lemma_ for token in doc[:-1]])
+            for token in doc:
+                lemmatized_sentences.append(token.lemma_)
 
         return lemmatized_sentences
 
     def lemmatize_hannover(self, text):
-        tokenized_sentences = split_into_sentences_and_tokenize(text, language=self.language)
+        tokenized_sentences = split_into_sentences_and_tokenize(
+            text, language=self.language
+        )
         lemmatized_sentences = []
         for sent in tokenized_sentences:
-            lemmatized_sentences.append([x for _, x, _ in self.hannover_tagger.tag_sent(sent, taglevel=1)])
+            lemmatized_sentences.append(
+                [
+                    x
+                    for _, x, _ in self.hannover_tagger.tag_sent(
+                        sent, taglevel=1
+                    )
+                ]
+            )
         return lemmatized_sentences
 
 
 class LemmatizerEnglish:
     def __init__(self):
-        self.nlp = spacy.load("en_core_web_sm", disable=['ner'])
         self.language = "english"
-        nltk.data.path.append(__data_path__ + r"\nltk_data")
-        self.nltk_lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.nlp = spacy.load("en_core_web_sm", disable=["ner"])
+
+        try:
+            nltk.data.path.append(__data_path__ + r"\nltk_data")
+            self.nltk_lemmatizer = nltk.stem.WordNetLemmatizer()
+        except FileNotFoundError:
+            print("File not found: ignoring...")
 
     def lemmatize_spacy(self, text):
         sentences = split_into_sentences(text, language=self.language)
@@ -90,14 +117,16 @@ class LemmatizerEnglish:
         return lemmatized_sentences
 
     def lemmatize_nltk(self, text):
-        tokenized_sentences = split_into_sentences_and_tokenize(text, self.language)
+        tokenized_sentences = split_into_sentences_and_tokenize(
+            text, self.language
+        )
         lemmatized_sentences = []
         for sentence in tokenized_sentences:
             lemmatized_sentence = []
             tagged_sentence = nltk.pos_tag(sentence)
             for token, tag in tagged_sentence:
-                lemmatized_sentence.append(self.nltk_lemmatizer.lemmatize(token, get_wordnet_pos(tag)))
+                lemmatized_sentence.append(
+                    self.nltk_lemmatizer.lemmatize(token, get_wordnet_pos(tag))
+                )
             lemmatized_sentences.append(lemmatized_sentence)
         return lemmatized_sentences
-
-

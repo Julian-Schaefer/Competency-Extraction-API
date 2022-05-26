@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
+import os
 
 
 class CompetencyInsertionFailed(Exception):
@@ -35,61 +36,89 @@ class CompetencyAndCourseInsertionFailed(Exception):
 
 class GraphDatabaseConnection:
     def __init__(self):
-        self.driver = GraphDatabase.driver(
-            "bolt://db:7687", auth=("neo4j", "password")
-        )
+        db_uri = os.environ.get("DB_URI")
+        self.driver = GraphDatabase.driver(db_uri, auth=("neo4j", "password"))
 
     def close(self):
         self.driver.close()
 
-    def create_competency(
-        self, competencyName: str, competencyBody: str
-    ) -> str:
+    def create_competency(self, competency) -> None:
         """
         Create competency
 
-        Insert competeny with its name and body into the db
+        Insert competeny with its properties and labels into the db
 
         Parameters:
-            competencyName: Competency name as string
-            competencyBody: Competency body as string
+            competency: Competency with Properties and Labels
 
         Raises: CompetencyInsertionFailed if insertion into DB failed
 
-        Returns:
-        Competency name and node as string
-
         """
-        if self.retrieve_competency_by_name(competencyName):
-            raise CompetencyInsertionFailed(
-                f"Competancy with name '{competencyName}' already exists"
-            )
-
-        with self.driver.session() as session:
-            competency = session.write_transaction(
-                self._create_competency_transaction,
-                competencyName,
-                competencyBody,
-            )
-            return competency
+        uri = competency["conceptUri"]
+        if not self.retrieve_competency_by_uri(uri):
+            with self.driver.session() as session:
+                session.write_transaction(self._create_competency, competency)
 
     @staticmethod
-    def _create_competency_transaction(
-        tx, competencyName: str, competencyBody: str
-    ) -> str:
-        query = "CREATE (c:Competency) SET c.name = $name SET c.body = $body RETURN [id(c), c.name, c.body] AS result"
+    def _create_competency(tx, competency):
+        create_competency_query = "CREATE (com:Competency {conceptType:$conceptType, conceptUri:$conceptUri, skillType:$skillType, description:$description}) RETURN id(com) AS id"
+
         try:
             result = tx.run(
-                query,
-                name=competencyName,
-                body=competencyBody,
+                create_competency_query,
+                conceptType=competency["conceptType"],
+                conceptUri=competency["conceptUri"],
+                skillType=competency["skillType"],
+                description=competency["description"],
             )
-        except ClientError as e:
-            raise CompetencyInsertionFailed(f"{query} raised an error: \n {e}")
 
-        result = result.single()["result"]
-        competency = {"id": result[0], "name": result[1], "body": result[2]}
-        return competency
+            if not result:
+                raise CompetencyInsertionFailed(
+                    "Inserting Competency did not return result."
+                )
+
+            result = result.single()
+            competencyId = result["id"]
+        except ClientError as e:
+            raise CompetencyInsertionFailed(
+                f"{create_competency_query} raised an error: \n {e}"
+            )
+
+        create_label_query = (
+            "CREATE (lab:Label {text:$text, type:$type}) RETURN id(lab) AS id"
+        )
+        create_relation_query = "MATCH (com:Competency) WHERE id(com)=$competencyId MATCH (lab:Label) WHERE id(lab)=$labelId CREATE (com)-[r:IDENTIFIED_BY]->(lab)"
+
+        for label in competency["labels"]:
+            try:
+                result = tx.run(
+                    create_label_query,
+                    text=label["text"],
+                    type=label["type"],
+                )
+
+                if not result:
+                    raise CompetencyInsertionFailed(
+                        "Inserting Label did not return result."
+                    )
+
+                result = result.single()
+                labelId = result["id"]
+            except ClientError as e:
+                raise CompetencyInsertionFailed(
+                    f"{create_label_query} raised an error: \n {e}"
+                )
+
+            try:
+                tx.run(
+                    create_relation_query,
+                    competencyId=competencyId,
+                    labelId=labelId,
+                )
+            except ClientError as e:
+                raise CompetencyInsertionFailed(
+                    f"{create_relation_query} raised an error: \n {e}"
+                )
 
     def create_course(self, courseName: str, courseBody: str) -> str:
         """
@@ -218,26 +247,7 @@ class GraphDatabaseConnection:
         ]
         return competencies
 
-    @staticmethod
-    def _retrieve_competency_by_name(tx, competencyName) -> Optional[Dict]:
-        query = "MATCH (c:Competency) WHERE c.name=$name RETURN [id(c), c.name, c.body] AS result"
-        try:
-            result = tx.run(query, name=competencyName)
-        except ClientError as e:
-            raise RetrievingCompetencyFailed(
-                f"{query} raised an error: \n {e}"
-            )
-        if not result:
-            return None
-        result = result.single()
-        if not result:
-            return None
-        result = result["result"]
-        competency = {"id": result[0], "name": result[1], "body": result[2]}
-
-        return competency
-
-    def retrieve_competency_by_name(self, competencyName) -> Optional[Dict]:
+    def retrieve_competency_by_uri(self, uri) -> Optional[Dict]:
         """
         Retrieve competency by name
 
@@ -254,9 +264,25 @@ class GraphDatabaseConnection:
         """
         with self.driver.session() as session:
             competency = session.write_transaction(
-                self._retrieve_competency_by_name, competencyName
+                self._retrieve_competency_by_uri, uri
             )
             return competency
+
+    @staticmethod
+    def _retrieve_competency_by_uri(tx, uri) -> Optional[Dict]:
+        query = "MATCH (com:Competency) WHERE com.conceptUri=$uri RETURN id(com) AS id"
+        try:
+            result = tx.run(query, uri=uri)
+        except ClientError as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
+        if not result:
+            return None
+        result = result.single()
+        if not result:
+            return None
+        return result["id"]
 
     @staticmethod
     def _retrieve_course_by_name(tx, courseName) -> Optional[Dict]:
