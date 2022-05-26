@@ -6,6 +6,7 @@ from nltk.corpus import wordnet
 from HanTa import HanoverTagger as Ht
 import os
 from typing import List
+from pandas import DataFrame
 
 
 __data_path__ = os.path.dirname(__file__) + r"\lemma_cache_data"
@@ -50,7 +51,7 @@ def tokenize_sentences(sentences: List[str], language: str) -> List[List[str]]:
 def remove_punctuation_from_tokenized_sentences(tokenized_sentences: List[List[str]]) -> List[List[str]]:
     """
     Removes punctuation from a list of tokenized sentences. If a token only contains punctuation,
-    it is removed entirely. Hyphens are only removed if the appear at the start or the end of the token.
+    it is removed entirely. Hyphens are only removed if they appear at the start or the end of the token.
     For example the hyphen in the token "H-Milch" will not be removed.
     :param tokenized_sentences: A list of tokenized sentences
     :type tokenized_sentences: List[List[str]]
@@ -90,17 +91,37 @@ def remove_numeric_tokens(tokenized_sentences: List[List[str]]) -> List[List[str
     return tokenized_sentences_without_numeric_tokens
 
 
-def lowercase_course_descr(course_descr: str):
+def lowercase_tokenized_sentences(tokenized_sentences: List[List[str]]) -> List[List[str]]:
     """
-    :param course_descr: A course description
-    :type course_descr: str
+    :param tokenized_sentences: A list of tokenized sentences
+    :type tokenized_sentences: List[List[str]]
     :return: The lowercased course description
-    :rtype: str
+    :rtype: List[List[str]]
     """
-    return str.lower(course_descr)
+    lowercased_tokenized_sentences = []
+    for sentence in tokenized_sentences:
+        lowercased_tokenized_sentences.append(
+            [str.lower(token) for token in sentence]
+        )
+    return lowercased_tokenized_sentences
 
 
-class LemmatizerGerman:
+class TextProcessorGerman:
+    """
+    This class is provides an interface for processing course descriptions before parsing them
+    into the entitiy recognition algorithm
+    :param morphys: The morphys look up table for german words and their respective lemmas
+    :type morphys: DataFrame
+    :param nlp: The pretrained spacy "de_core_news_sm" model for the German language
+    :type nlp: spacy.lang.de.German
+    :param language: The language that the TextProcessor is compatible for
+    :type language: str
+    :param hannover_tagger: The Hannover Tagger from the Hanta library which provides a pretrained nlp model
+    for the German language
+    :type hannover_tagger: HanTa.HanoverTagger.HanoverTagger
+    :param stopwords: A list of German stopwords. The stopwords were stored from the following git repo
+    https://github.com/stopwords-iso/stopwords-de
+    """
     def __init__(self):
         add_nltk_data_path()
         self.morphys = pd.read_csv(__data_path__ + r"\morphys.csv", encoding="utf-8", index_col=0)
@@ -127,7 +148,19 @@ class LemmatizerGerman:
             )
         return tokenized_sentences_without_stopwords
 
-    def lemmatize_morphys(self, tokenized_sentences):
+    def lemmatize_morphys(self, tokenized_sentences: List[List[str]]) -> List[List[str]]:
+        """
+        Lemmatize a list of tokenized sentences using the morphys look up table.
+        If a lemma for a token is not found in the table and the token represents a hyphen-separated compound,
+        the compound is separated and the lemma for each individual word is looked up instead.
+        The individual lemmas are then joined back together using hyphens.
+        For example the compound "Personen-gegessen" becomes "Person-essen".
+        Only the morphys lemmatizer provides this functionality as it used first in the general lemmatizer method.
+        :param tokenized_sentences: A list of tokenized sentences
+        :type tokenized_sentences: List[List[str]]
+        :return: The list of tokenized sentences where each token is lemmatized
+        :rtype: List[List[str]]
+        """
         df = self.morphys
         lemmatized_tokenized_sentences = []
         # loop over each tokenized sentence
@@ -136,16 +169,38 @@ class LemmatizerGerman:
 
             # loop over each token in the sentence
             for token in sent:
+                # try to find the token
                 try:
                     lemma = df[df["form"] == token]["lemma"].tolist()[0]
                 except IndexError:
-                    lemma = token
+                    # if it does not find the token, check if it is a hyphen separated compound
+                    if "-" in token:
+                        # if yes, split the compound, lemmatize each component separately and join the
+                        # individual lemmas back together using hyphens
+                        token = token.split("-")
+                        lemma = []
+                        for x in token:
+                            try:
+                                lemma.append(df[df["form"] == x]["lemma"].tolist()[0])
+                            except IndexError:
+                                lemma.append(x)
+                        lemma = "-".join(lemma)
+                    else:
+                        # if not just use the token itself as the lemma
+                        lemma = token
                 lemmatized_sentence.append(lemma)
 
             lemmatized_tokenized_sentences.append(lemmatized_sentence)
         return lemmatized_tokenized_sentences
 
     def lemmatize_spacy(self, tokenized_sentences):
+        """
+        Lemmatize a list of tokenized sentences using the spacy pretrained "de_core_news_sm" model.
+        :param tokenized_sentences: A list of tokenized sentences
+        :type tokenized_sentences: List[List[str]]
+        :return: The list of tokenized sentences where each token is lemmatized
+        :rtype: List[List[str]]
+        """
         lemmatized_sentences = []
         for sentence in tokenized_sentences:
             lemmatized_sentences.append(
@@ -154,10 +209,59 @@ class LemmatizerGerman:
         return lemmatized_sentences
 
     def lemmatize_hannover(self, tokenized_sentences):
+        """
+        Lemmatize a list of tokenized sentences using the pretrained "Hannover Tagger" model.
+        :param tokenized_sentences: A list of tokenized sentences
+        :type tokenized_sentences: List[List[str]]
+        :return: The list of tokenized sentences where each token is lemmatized
+        :rtype: List[List[str]]
+        """
         lemmatized_sentences = []
         for sent in tokenized_sentences:
             lemmatized_sentences.append([x for _, x, _ in self.hannover_tagger.tag_sent(sent, taglevel=1)])
         return lemmatized_sentences
+
+    def lemmatize(self, tokenized_sentences):
+        """
+        Lemmatize a list of tokenized sentences first using the morphys lemmatizer then the spacy lemmatizer and
+        finally the hannover lemmatizer.
+        :param tokenized_sentences: A list of tokenized sentences
+        :type tokenized_sentences: List[List[str]]
+        :return: The list of tokenized sentences where each token is lemmatized
+        :rtype: List[List[str]]
+        """
+        tokenized_sentences = self.lemmatize_morphys(tokenized_sentences)
+        tokenized_sentences = self.lemmatize_spacy(tokenized_sentences)
+        tokenized_sentences = self.lemmatize_hannover(tokenized_sentences)
+        return tokenized_sentences
+
+    def preprocess_course_description(self, course_descr: str) -> List[List[str]]:
+        """
+        Preprocess a course description before parsing it into the entity recognition algorithm.
+        This method represents a wrapper for all methods and functions in this module.
+        The course descriptions are preprocessed in the following order:
+        - split into sentences
+        - tokenize each sentence
+        - remove punctuation
+        - remove numeric tokens
+        - remove stopwords
+        - lemmatize using the morphys lemmatizer
+        - lemmatize using the spacy lemmatizer
+        - lemmatize using the hannover lemmatizer
+        - lowercase each token
+        :param course_descr: A course description
+        :type course_descr: str
+        :return: The preprocessed course description
+        :rtype: List[List[str]]
+        """
+        text = split_course_descr_into_sentences(course_descr, self.language)
+        text = tokenize_sentences(text, self.language)
+        text = remove_punctuation_from_tokenized_sentences(text)
+        text = remove_numeric_tokens(text)
+        text = self.remove_stopwords_from_tokenized_sentences(text)
+        text = self.lemmatize(text)
+        text = lowercase_tokenized_sentences(text)
+        return text
 
 
 class LemmatizerEnglish:
@@ -197,4 +301,5 @@ class LemmatizerEnglish:
                 lemmatized_sentence.append(self.nltk_lemmatizer.lemmatize(token, tag))
             lemmatized_sentences.append(lemmatized_sentence)
         return lemmatized_sentences
+
 
