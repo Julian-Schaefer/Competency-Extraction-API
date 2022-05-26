@@ -6,10 +6,7 @@ import requests
 
 
 class Store:
-    baseUrl = "https://ec.europa.eu/esco/api"
-
-    def __init__(self, language="de"):
-        self.language = language
+    def __init__(self):
         self.db = GraphDatabaseConnection()
         self.lemmatizer = LemmatizerGerman()
 
@@ -47,13 +44,9 @@ class Store:
             self.db.create_competency(skill)
 
     def check_term(self, term):
-        query = {"text": term, "language": self.language}
-        response = requests.get(self.baseUrl + "/terms", params=query)
-        json = response.json()
-        return json["total"] > 0
+        is_found = self.db.find_label_by_term(term)
+        return is_found
 
     def check_sequence(self, sequence):
-        query = {"text": sequence, "language": self.language}
-        response = requests.get(self.baseUrl + "/suggest2", params=query)
-        json = response.json()
-        return json["_embedded"]["results"]
+        competencies = self.db.find_competency_by_sequence(sequence)
+        return competencies

@@ -1,4 +1,5 @@
 from typing import List, Optional, Dict
+from xmlrpc.client import Boolean
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 import os
@@ -24,6 +25,12 @@ class RetrievingCourseFailed(Exception):
 
 class RetrievingCompetencyFailed(Exception):
     """Raised when competency(ies) couldn't be retrieved"""
+
+    pass
+
+
+class RetrievingLabelFailed(Exception):
+    """Raised when label/s couldn't be retrieved"""
 
     pass
 
@@ -656,3 +663,52 @@ class GraphDatabaseConnection:
         return self.insert_course_with_nonexisting_competency(
             competencyName, competecyBody, courseName, courseBody
         )
+
+    def find_label_by_term(self, term) -> Boolean:
+        with self.driver.session() as session:
+            is_found = session.write_transaction(
+                self._find_label_by_term, term
+            )
+            return is_found
+
+    @staticmethod
+    def _find_label_by_term(tx, term) -> Boolean:
+        query = "MATCH (lab:Label) where lab.text CONTAINS $term RETURN lab AS label"
+
+        try:
+            result = tx.run(query, term=term)
+
+            if not result:
+                return None
+
+            labels = [record["label"]._properties for record in result]
+            count = len(labels)
+            return count > 0
+        except Exception as e:
+            raise RetrievingLabelFailed(f"{query} raised an error: \n {e}")
+
+    def find_competency_by_sequence(self, sequence):
+        with self.driver.session() as session:
+            competencies = session.write_transaction(
+                self._find_competency_by_sequence, sequence
+            )
+            return competencies
+
+    @staticmethod
+    def _find_competency_by_sequence(tx, sequence):
+        query = "MATCH (lab:Label)<-[:IDENTIFIED_BY]-(com:Competency) where lab.text=$sequence RETURN com AS competency"
+
+        try:
+            result = tx.run(query, sequence=sequence)
+
+            if not result:
+                return None
+
+            competencies = [
+                record["competency"]._properties for record in result
+            ]
+            return competencies
+        except Exception as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
