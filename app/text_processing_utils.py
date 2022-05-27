@@ -44,7 +44,7 @@ def tokenize_sentences(sentences: List[str], language: str) -> List[List[str]]:
     :rtype: List[List[str]]
     """
     add_nltk_data_path()
-    tokenized_text = [nltk.word_tokenize(sentence[:-1], language=language) for sentence in sentences]
+    tokenized_text = [nltk.word_tokenize(sentence, language=language) for sentence in sentences]
     return tokenized_text
 
 
