@@ -164,9 +164,11 @@ class TextProcessorGerman:
         df = self.morphys
         lemmatized_tokenized_sentences = []
         # loop over each tokenized sentence
+        i = 1
         for sent in tokenized_sentences:
+            print(i, " / ", len(tokenized_sentences))
             lemmatized_sentence = []
-
+            i += 1
             # loop over each token in the sentence
             for token in sent:
                 # try to find the token
@@ -259,7 +261,8 @@ class TextProcessorGerman:
         text = remove_punctuation_from_tokenized_sentences(text)
         text = remove_numeric_tokens(text)
         text = self.remove_stopwords_from_tokenized_sentences(text)
-        text = self.lemmatize(text)
+        text = self.lemmatize_morphys(text)
+        # text = self.lemmatize(text)
         text = lowercase_tokenized_sentences(text)
         return text
 
@@ -301,5 +304,3 @@ class LemmatizerEnglish:
                 lemmatized_sentence.append(self.nltk_lemmatizer.lemmatize(token, tag))
             lemmatized_sentences.append(lemmatized_sentence)
         return lemmatized_sentences
-
-
