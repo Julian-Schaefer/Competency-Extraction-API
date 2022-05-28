@@ -1,0 +1,5 @@
+tests/**
+.idea/**
+.pytest_cache/**
+.vscode/**
+.env

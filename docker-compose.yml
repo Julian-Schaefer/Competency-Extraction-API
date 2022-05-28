@@ -10,6 +10,7 @@ services:
       - '7687:7687'
     volumes:
       - 'db:/data'
+      - './data:/var/lib/neo4j/import'
 
   web:
     build: '.'
@@ -18,10 +19,13 @@ services:
     environment:
       - FLASK_DEBUG=1
       - PORT=5000
+      - DB_URI=bolt://db:7687
+      - DATA_FILE=/data/skills_de.csv
     ports:
       - '5000:5000'
     volumes:
       - '.:/app'
+      - './data:/data'
     links:
       - 'db:db'
 
