@@ -665,6 +665,20 @@ class GraphDatabaseConnection:
         )
 
     def find_label_by_term(self, term) -> Boolean:
+        """Check if Label exists by term
+
+        Retrieves all labels containing this term and returns true, if there
+        is more than 1 label containing that term. Returns false otherwise.
+
+        Parameters:
+            term: a single word as string
+
+        Raises:
+            RetrievingLabelFailed if communication with the database goes wrong
+
+        Returns:
+            If the term exists in a label as boolean
+        """
         with self.driver.session() as session:
             is_found = session.write_transaction(
                 self._find_label_by_term, term
@@ -687,7 +701,21 @@ class GraphDatabaseConnection:
         except Exception as e:
             raise RetrievingLabelFailed(f"{query} raised an error: \n {e}")
 
-    def find_competency_by_sequence(self, sequence):
+    def find_competency_by_sequence(self, sequence) -> Dict:
+        """Find competency by Sequence
+
+        Find all competencies by matching their labels to the complete sequence that
+        has been provided.
+
+        Parameters:
+            sequence: sequence of words as string
+
+        Raises:
+            RetrievingCompetencyFailed if communication with the database goes wrong
+
+        Returns:
+            Matching competencies as dict
+        """
         with self.driver.session() as session:
             competencies = session.write_transaction(
                 self._find_competency_by_sequence, sequence
@@ -695,7 +723,7 @@ class GraphDatabaseConnection:
             return competencies
 
     @staticmethod
-    def _find_competency_by_sequence(tx, sequence):
+    def _find_competency_by_sequence(tx, sequence) -> Dict:
         query = "MATCH (lab:Label)<-[:IDENTIFIED_BY]-(com:Competency) where lab.text=$sequence RETURN com AS competency"
 
         try:

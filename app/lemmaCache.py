@@ -6,7 +6,7 @@ from HanTa import HanoverTagger as Ht
 import os
 
 
-__data_path__ = os.path.dirname(__file__) + r"\lemma_cache_data"
+__data_path__ = os.path.dirname(__file__) + "/lemma_cache_data"
 
 
 def get_wordnet_pos(treebank_tag):
@@ -38,18 +38,15 @@ def split_into_sentences_and_tokenize(text, language):
 
 class LemmatizerGerman:
     def __init__(self):
+        nltk.data.path.append(__data_path__ + "/nltk_data")
         self.nlp = spacy.load("de_core_news_sm", disable=["ner"])
         self.language = "german"
-
-        try:
-            self.morphys = pd.read_csv(
-                __data_path__ + r"\morphys.csv", encoding="utf-8", index_col=0
-            )
-            self.hannover_tagger = Ht.HanoverTagger(
-                __data_path__ + r"\morphmodel_ger.pgz"
-            )
-        except FileNotFoundError:
-            print("File not found: ignoring...")
+        self.morphys = pd.read_csv(
+            __data_path__ + "/morphys.csv", encoding="utf-8", index_col=0
+        )
+        self.hannover_tagger = Ht.HanoverTagger(
+            __data_path__ + "/morphmodel_ger.pgz"
+        )
 
     def lemmatize_morphys(self, text):
         lemmatized_tokenized_text = []
@@ -102,12 +99,8 @@ class LemmatizerEnglish:
     def __init__(self):
         self.language = "english"
         self.nlp = spacy.load("en_core_web_sm", disable=["ner"])
-
-        try:
-            nltk.data.path.append(__data_path__ + r"\nltk_data")
-            self.nltk_lemmatizer = nltk.stem.WordNetLemmatizer()
-        except FileNotFoundError:
-            print("File not found: ignoring...")
+        nltk.data.path.append(__data_path__ + "/nltk_data")
+        self.nltk_lemmatizer = nltk.stem.WordNetLemmatizer()
 
     def lemmatize_spacy(self, text):
         sentences = split_into_sentences(text, language=self.language)

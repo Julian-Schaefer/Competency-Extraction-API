@@ -1,14 +1,17 @@
 import os
 from app.db import GraphDatabaseConnection
 import pandas
-from app.lemmaCache import LemmatizerGerman
-import requests
+from app.lemmaCache import LemmatizerEnglish, LemmatizerGerman
 
 
 class Store:
-    def __init__(self):
+    def __init__(self, language="de"):
         self.db = GraphDatabaseConnection()
-        self.lemmatizer = LemmatizerGerman()
+
+        if language == "de":
+            self.lemmatizer = LemmatizerGerman()
+        elif language == "en":
+            self.lemmatizer = LemmatizerEnglish()
 
     def initialize(self):
         data_file = pandas.read_csv(os.environ.get("DATA_FILE"))
