@@ -163,36 +163,27 @@ class TextProcessorGerman:
         """
         df = self.morphys
         lemmatized_tokenized_sentences = []
-        # loop over each tokenized sentence
-        i = 1
-        for sent in tokenized_sentences:
-            print(i, " / ", len(tokenized_sentences))
-            lemmatized_sentence = []
-            i += 1
-            # loop over each token in the sentence
-            for token in sent:
-                # try to find the token
-                try:
-                    lemma = df[df["form"] == token]["lemma"].tolist()[0]
-                except IndexError:
-                    # if it does not find the token, check if it is a hyphen separated compound
-                    if "-" in token:
-                        # if yes, split the compound, lemmatize each component separately and join the
-                        # individual lemmas back together using hyphens
-                        token = token.split("-")
-                        lemma = []
-                        for x in token:
-                            try:
-                                lemma.append(df[df["form"] == x]["lemma"].tolist()[0])
-                            except IndexError:
-                                lemma.append(x)
-                        lemma = "-".join(lemma)
-                    else:
-                        # if not just use the token itself as the lemma
-                        lemma = token
-                lemmatized_sentence.append(lemma)
-
-            lemmatized_tokenized_sentences.append(lemmatized_sentence)
+        for i, sentence in enumerate(tokenized_sentences):
+            # save sentence as dataframe
+            sent_df = pd.DataFrame(sentence, columns=["form"])
+            lemmatized_tokenized_sentences.append(
+                pd.merge(sent_df, df, on="form", how="left")["lemma"].fillna(sent_df["form"]).tolist()
+            )
+            for j, token in enumerate(lemmatized_tokenized_sentences[i]):
+                if "-" in token:
+                    token = token.split("-")
+                    lemma = []
+                    for x in token:
+                        try:
+                            lemma.append(df[df["form"] == x]["lemma"].tolist()[0])
+                        except IndexError:
+                            lemma.append(x)
+                    lemma = "-".join(lemma)
+                    lemmatized_tokenized_sentences[i][j] = lemma
+                else:
+                    # if not just use the token itself as the lemma
+                    lemma = token
+                    lemmatized_tokenized_sentences[i][j] = lemma
         return lemmatized_tokenized_sentences
 
     def lemmatize_spacy(self, tokenized_sentences):
@@ -304,3 +295,5 @@ class LemmatizerEnglish:
                 lemmatized_sentence.append(self.nltk_lemmatizer.lemmatize(token, tag))
             lemmatized_sentences.append(lemmatized_sentence)
         return lemmatized_sentences
+
+
