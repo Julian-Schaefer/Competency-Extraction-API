@@ -28,5 +28,8 @@ def test_store_check_sequence_non_existing():
 
 def test_store_check_sequence_existing():
     store_instance = Store()
-    result = store_instance.check_sequence("Musikpersonal verwalten")
-    assert len(result) > 0
+    result = store_instance.check_sequence(
+        "Prioritäten im Zusammenhang mit der Rohrleitungsintegrität weiterverfolgen"
+    )
+    assert len(result) == 1
+
