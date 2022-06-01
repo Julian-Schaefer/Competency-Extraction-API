@@ -7,6 +7,7 @@ from app.db import (
     RetrievingCompetencyFailed,
     CompetencyAndCourseInsertionFailed,
 )
+from app.store import Store
 from app.competency_extractors.competency_extractor import DummyExtractor
 
 app = Flask(__name__)
@@ -15,6 +16,13 @@ app = Flask(__name__)
 @app.route("/")
 def hello():
     return "<p>Welcome to our API server, you can query courses and competencies here.</p>"
+
+
+@app.route("/initialize", methods=["POST"])
+def initialize():
+    store = Store()
+    store.initialize()
+    return "Database and Store have been initialized successfully!"
 
 
 @app.route("/course/<string:course_name>", methods=["POST"])

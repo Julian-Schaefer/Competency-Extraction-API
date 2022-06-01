@@ -14,7 +14,11 @@ spacy = "*"
 wheel = "*"
 nltk = "*"
 hanta = "*"
+<<<<<<< HEAD
 lxml = "*"
+=======
+python-dotenv = "*"
+>>>>>>> f3632fcc711149b848d65621c9b9f0ebefff714c
 
 [dev-packages]
 black = "*"
