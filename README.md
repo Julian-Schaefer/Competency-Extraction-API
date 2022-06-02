@@ -14,10 +14,10 @@ Run the following in root folder
 ## API server
 You can find the documentation of our API [here](https://amir-mo1999.github.io/AWT-Project/).
 
-## Pre-processing
-To use the pre-processing pipeline use the following code:
+## Preprocessing
+To use the preprocessing pipeline use the following code:
 ```
-from app.text_processing_utils import TextProcessorGerman
-prc_pipeline = TextProcessorGerman()
-pre_processed_course_descriptions = prc_pipeline.preprocess_course_descriptions(course_descriptions)
+from app.preprocessing_utils import PreprocessorGerman
+prc_pipeline = PreprocessorGerman()
+preprocessed_course_descriptions = prc_pipeline.preprocess_course_descriptions(course_descriptions)
 ```
