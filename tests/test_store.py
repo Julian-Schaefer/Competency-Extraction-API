@@ -21,12 +21,12 @@ def test_store_check_term_existing():
 def test_store_check_sequence_non_existing():
     store_instance = Store()
     result = store_instance.check_sequence(
-        "nichtexistierendeswort in einer Sequence"
+        ["nichtexistierendeswort", "in", "einer", "sequence"]
     )
     assert len(result) == 0
 
 
 def test_store_check_sequence_existing():
     store_instance = Store()
-    result = store_instance.check_sequence("Musikpersonal verwalten")
+    result = store_instance.check_sequence(["musikpersonal", "verwalten"])
     assert len(result) > 0
