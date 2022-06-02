@@ -1,90 +1,87 @@
 from typing import List, Optional, Dict
-from app import preprocessing_utils
-from app import store
-from itertools import groupby
-from typing import List, Tuple, Dict
+from typing import List, Dict
+from app.store import Store
 
 
 class CompetencyExtractorInterface:
     """Interface for Competency Extractors"""
 
-    def extract_competencies(self, course_body: str) -> List[Optional[Dict]]:
-        """Extract competencies from course_body."""
+    def extract_competencies(
+        self, course_description: str
+    ) -> List[Optional[Dict]]:
+        """Extract competencies from course_description."""
         pass
 
 
 class DummyExtractor(CompetencyExtractorInterface):
     """Dummy extractor for testing."""
 
-    def extract_competencies(self, course_body: str) -> List[Optional[Dict]]:
+    def extract_competencies(
+        self, course_description: str
+    ) -> List[Optional[Dict]]:
         """Extract competencies
 
-        Extract competencies from course_body returning every word.
+        Extract competencies from course_description returning every word.
 
         Parameters:
-            course_body: course body as string
+            course_description: course body as string
 
         Returns:
             List of competencies as dict
         """
         return [
             {"name": c, "body": f"some description of {c}"}
-            for c in course_body.split()
+            for c in course_description.split()
         ]
 
 
-class Dummy2Extractor(CompetencyExtractorInterface):
-
+class PaperCompetencyExtractor(CompetencyExtractorInterface):
     def __init__(self):
-        self.lemmatizer_de = preprocessing_utils.PreprocessorGerman()
-        self.store = store.Store()
+        self.store = Store()
+        self.lemmatizer = self.store.lemmatizer
 
-    def extract_sequences_from_sentence(self, sentence):
-        is_in_term_store = []
-        for token in sentence:
-            if self.store.check_term(token):
-                is_in_term_store.append(token)
-            else:
-                is_in_term_store.append(None)
-        sequences = (list(g) for _, g in groupby(is_in_term_store, key=None.__ne__))
-        print([x for x in sequences if x != [None]])
-        return [x for x in sequences if x != [None]]
+    def extract_competencies(
+        self, course_description: str
+    ) -> List[Optional[Dict]]:
+        tt = self.lemmatizer.preprocess_course_descriptions(
+            [course_description]
+        )[0]
 
-    def extract_competencies_from_sentence(self, sentence):
-        return self.extract_sequences_from_sentence(sentence)
-
-    def extract_competencies(self, course_body: str) -> List[Optional[Dict]]:
-        # lemmatize course
-        course_body = self.lemmatizer_de.lemmatize_hannover(course_body)
-        # Loop over sentences
-        for sentence in course_body:
-            self.extract_competencies_from_sentence(sentence)
-
-
-class Dummy3Extractor(CompetencyExtractorInterface):
-
-    def __init__(self):
-        self.lemmatizer_de = preprocessing_utils.PreprocessorGerman()
-        self.store = store.Store()
-
-    def extract_competencies_from_sentence(self, sentence):
-        p = 0
         at = ""
-        a = []
-        for token in sentence:
-            p += 1
+        all_competencies = []
+        p = 0
 
+        for token in tt:
+            p = p + 1
+            if not self.store.check_term(token):
+                at = at + " " + token
+            else:
+                (phrase, _) = self.lookahead(tt[(p):], [token], 1)
+                if len(phrase) > 0:
+                    competencies = self.store.check_sequence(phrase)
+                    if len(competencies) > 0:
+                        all_competencies += competencies
+                        at = at + " " + " ".join(phrase)
+                        continue
 
+                at = at + " " + token
 
+        return all_competencies
 
+    def lookahead(self, tt, fp, n):
+        if len(tt) == 0:
+            return (fp, n)
 
-    def extract_competencies(self, course_body: str) -> List[Optional[Dict]]:
-        # lemmatize course
-        course_body = self.lemmatizer_de.lemmatize_hannover(course_body)
-        # Loop over sentences
-        for sentence in course_body:
-            self.extract_competencies_from_sentence(sentence)
+        termfound = self.store.check_term(tt[0])
+        phraseFound = len(self.store.check_sequence(fp)) > 0
 
+        if termfound or phraseFound:
+            new_fp = fp[:]
+            new_fp.append(tt[0])
+            (ph, l) = self.lookahead(tt[1:], new_fp, n + 1)
+            if len(self.store.check_sequence(ph)) > 0:
+                return (ph, l)
+            elif phraseFound:
+                return (fp, n)
 
-
-
+        return ([], n)

@@ -8,7 +8,11 @@ from app.db import (
     CompetencyAndCourseInsertionFailed,
 )
 from app.store import Store
-from app.competency_extractors.competency_extractor import DummyExtractor
+from app.competency_extractors.competency_extractor import (
+    PaperCompetencyExtractor,
+    DummyExtractor,
+)
+
 
 app = Flask(__name__)
 
@@ -25,31 +29,39 @@ def initialize():
     return "Database and Store have been initialized successfully!"
 
 
-@app.route("/course/<string:course_name>", methods=["POST"])
-def create_course(course_name: str):
+@app.route("/course", methods=["POST"])
+def create_course():
     if request.headers.get("Content-Type") != "application/json":
         return Response(
             "Content-Type not supported! Expected type application/json",
             status=400,
             mimetype="application/json",
         )
-    course_body = json.loads(request.data).get("course_body")
+    course_description = json.loads(request.data).get("courseDescription")
 
-    if not course_body:
+    if not course_description:
         return Response(
-            "Body 'course_body' is missing",
+            "Body 'course_description' is missing",
             status=400,
             mimetype="application/json",
         )
 
+    competencyExtractor = PaperCompetencyExtractor()
     db = GraphDatabaseConnection()
     try:
-        course = db.create_course(course_name, course_body)
+        associated_competencies = competencyExtractor.extract_competencies(
+            course_description
+        )
+        associated_competencies_ids = [
+            competency[0] for competency in associated_competencies
+        ]
+
+        db.create_course(course_description, associated_competencies_ids)
     except CourseInsertionFailed as e:
         return Response(f"error: {e}", status=400, mimetype="application/json")
     db.close()
 
-    return jsonify(course)
+    return jsonify(associated_competencies)
 
 
 @app.route("/courses", methods=["GET", "HEAD"])

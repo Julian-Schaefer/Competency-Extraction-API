@@ -127,15 +127,17 @@ class GraphDatabaseConnection:
                     f"{create_relation_query} raised an error: \n {e}"
                 )
 
-    def create_course(self, courseName: str, courseBody: str) -> str:
+    def create_course(
+        self, course_description: str, associated_competencies_ids
+    ) -> str:
         """
         Create course
 
-        Insert competeny with its name and body into the db
+        Insert Course with its description and associated competencies
 
         Parameters:
-            courseName: course name as string
-            courseBody: course body as string
+            course_description: course description as string
+            associated_competencies_ids: associated competencies for this course description
 
         Raises: CourseInsertionFailed if insertion into DB failed
 
@@ -143,34 +145,41 @@ class GraphDatabaseConnection:
         course name and node as string
 
         """
-        if self.retrieve_course_by_name(courseName):
-            raise CourseInsertionFailed(
-                f"Course with name '{courseName}' already exists"
-            )
-
         with self.driver.session() as session:
-            course = session.write_transaction(
-                self._create_course_transaction, courseName, courseBody
+            session.write_transaction(
+                self._create_course_transaction,
+                course_description,
+                associated_competencies_ids,
             )
-            return course
 
     @staticmethod
     def _create_course_transaction(
-        tx, courseName: str, courseBody: str
+        tx, course_description: str, associated_competencies_ids
     ) -> str:
-        query = "CREATE (c:Course) SET c.name = $name SET c.body = $body RETURN [id(c), c.name, c.body] AS result"
+        create_course_query = "CREATE (c:Course) SET c.description = $description RETURN id(c) AS id"
         try:
             result = tx.run(
-                query,
-                name=courseName,
-                body=courseBody,
+                create_course_query, description=course_description
             )
+            course_id = result.single()["id"]
         except ClientError as e:
-            raise CourseInsertionFailed(f"{query} raised an error: \n {e}")
+            raise CourseInsertionFailed(
+                f"{create_course_query} raised an error: \n {e}"
+            )
 
-        result = result.single()["result"]
-        course = {"id": result[0], "name": result[1], "body": result[2]}
-        return course
+        create_relation_query = "MATCH (cou:Course) WHERE id(cou)=$courseId MATCH (com:Competency) WHERE id(com)=$competencyId CREATE (cou)-[r:MATCHES]->(com)"
+
+        for competency_id in associated_competencies_ids:
+            try:
+                tx.run(
+                    create_relation_query,
+                    courseId=course_id,
+                    competencyId=competency_id,
+                )
+            except ClientError as e:
+                raise CompetencyInsertionFailed(
+                    f"{create_relation_query} raised an error: \n {e}"
+                )
 
     def retrieve_all_courses(self) -> List[Optional[Dict]]:
         """
@@ -733,7 +742,8 @@ class GraphDatabaseConnection:
                 return None
 
             competencies = [
-                record["competency"]._properties for record in result
+                (record["competency"].id, record["competency"]._properties)
+                for record in result
             ]
             return competencies
         except Exception as e:
