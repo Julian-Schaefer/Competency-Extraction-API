@@ -1,7 +1,6 @@
 import os
 from app.db import GraphDatabaseConnection
 import pandas
-from app.lemmaCache import LemmatizerEnglish, LemmatizerGerman
 
 
 class Store:

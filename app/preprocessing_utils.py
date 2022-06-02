@@ -16,7 +16,7 @@ def add_nltk_data_path():
         nltk.data.path.append(__data_path__ + r"\nltk_data")
 
 
-class TextProcessorGerman:
+class PreprocessorGerman:
     """
     This class provides an interface for pre-processing course descriptions before parsing them into
     the entity recognition algorithm.

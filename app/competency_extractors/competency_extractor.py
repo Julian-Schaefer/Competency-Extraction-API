@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict
-from app import text_processing_utils
+from app import preprocessing_utils
 from app import store
 from itertools import groupby
 from typing import List, Tuple, Dict
@@ -36,7 +36,7 @@ class DummyExtractor(CompetencyExtractorInterface):
 class Dummy2Extractor(CompetencyExtractorInterface):
 
     def __init__(self):
-        self.lemmatizer_de = text_processing_utils.TextProcessorGerman()
+        self.lemmatizer_de = preprocessing_utils.PreprocessorGerman()
         self.store = store.Store()
 
     def extract_sequences_from_sentence(self, sentence):
@@ -64,7 +64,7 @@ class Dummy2Extractor(CompetencyExtractorInterface):
 class Dummy3Extractor(CompetencyExtractorInterface):
 
     def __init__(self):
-        self.lemmatizer_de = text_processing_utils.TextProcessorGerman()
+        self.lemmatizer_de = preprocessing_utils.PreprocessorGerman()
         self.store = store.Store()
 
     def extract_competencies_from_sentence(self, sentence):
