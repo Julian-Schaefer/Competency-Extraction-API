@@ -49,6 +49,9 @@ class Store:
         return is_found
 
     def check_sequence(self, sequence):
+        if len(sequence) == 0:
+            return []
+
         sequence_string = " ".join(sequence)
         competencies = self.db.find_competency_by_sequence(sequence_string)
         return competencies

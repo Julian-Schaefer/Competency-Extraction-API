@@ -54,7 +54,7 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
         for token in tt:
             p = p + 1
             if not self.store.check_term(token):
-                at = at + "" + token
+                at = at + " " + token
             else:
                 (phrase, _) = self.lookahead(tt[(p):], [token], 1)
                 if len(phrase) > 0:
