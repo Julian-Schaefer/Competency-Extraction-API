@@ -5,15 +5,15 @@ import os
 from typing import List
 import numpy as np
 
-__data_path__ = os.path.dirname(__file__) + r"\lemma_cache_data"
+__data_path__ = os.path.dirname(__file__) + "/lemma_cache_data"
 
 
 def add_nltk_data_path():
     """
     Adds the directory ".\app\nltk_data" to the list of paths that the nltk library searches in for valid nltk models.
     """
-    if not __data_path__ + r"\nltk_data" in nltk.data.path:
-        nltk.data.path.append(__data_path__ + r"\nltk_data")
+    if not __data_path__ + "/nltk_data" in nltk.data.path:
+        nltk.data.path.append(__data_path__ + "/nltk_data")
 
 
 class PreprocessorGerman:
@@ -21,11 +21,16 @@ class PreprocessorGerman:
     This class provides an interface for pre-processing course descriptions before parsing them into
     the entity recognition algorithm.
     """
+
     def __init__(self):
         add_nltk_data_path()
-        self.morphys = pd.read_csv(__data_path__ + r"\morphys.csv", encoding="utf-8", index_col=0)[["form", "lemma"]]
+        self.morphys = pd.read_csv(
+            __data_path__ + "/morphys.csv", encoding="utf-8", index_col=0
+        )[["form", "lemma"]]
         self.language = "german"
-        with open(__data_path__ + r"\stopwords-de.txt", "r", encoding="utf-8") as f:
+        with open(
+            __data_path__ + "/stopwords-de.txt", "r", encoding="utf-8"
+        ) as f:
             self.stopwords = list(map(str.strip, list(f)))
 
     @staticmethod
@@ -37,7 +42,9 @@ class PreprocessorGerman:
         :return: The list of course descriptions as a Pandas Series with newline characters removed
         :rtype: pd.Series[str]
         """
-        return pd.Series(course_descriptions, name="form").map(lambda x: x.replace("\n", ""))
+        return pd.Series(course_descriptions, name="form").map(
+            lambda x: x.replace("\n", "")
+        )
 
     def tokenize(self, course_descriptions: pd.Series) -> pd.Series:
         """
@@ -47,7 +54,11 @@ class PreprocessorGerman:
         :return: A Series of tokenized course descriptions, where each description is a Series itself
         :rtype: pd.Series[pd.Series[str]]
         """
-        return course_descriptions.map(lambda x: pd.Series(nltk.word_tokenize(x, language=self.language), name="form"))
+        return course_descriptions.map(
+            lambda x: pd.Series(
+                nltk.word_tokenize(x, language=self.language), name="form"
+            )
+        )
 
     @staticmethod
     def remove_punctuation(course_descriptions: pd.Series) -> pd.Series:
@@ -62,9 +73,15 @@ class PreprocessorGerman:
         """
         punct = string.punctuation.replace("-", "")
         course_descriptions = course_descriptions.map(
-            lambda x: x.where(x == ".", other=x.map(
-                lambda y: y.translate(str.maketrans("", "", punct)).strip("-")
-            )))
+            lambda x: x.where(
+                x == ".",
+                other=x.map(
+                    lambda y: y.translate(str.maketrans("", "", punct)).strip(
+                        "-"
+                    )
+                ),
+            )
+        )
         return course_descriptions.map(lambda x: x.drop(x[x == ""].index))
 
     @staticmethod
@@ -86,9 +103,13 @@ class PreprocessorGerman:
         :return: A Series of tokenized course descriptions with stopwords removed
         :rtype: pd.Series[pd.Series[str]]
         """
-        return course_descriptions.map(lambda x: x[~x.str.lower().isin(self.stopwords)])
+        return course_descriptions.map(
+            lambda x: x[~x.str.lower().isin(self.stopwords)]
+        )
 
-    def lemmatize_morphys_fast(self, course_descriptions: pd.Series) -> pd.Series:
+    def lemmatize_morphys_fast(
+        self, course_descriptions: pd.Series
+    ) -> pd.Series:
         """
         Lemmatize a Series of tokenized course descriptions using the Morphys lookup table.
         Compound words that are written using hyphen notation, that do not appear in the lookup table are first split
@@ -112,19 +133,23 @@ class PreprocessorGerman:
         df_hyphens = df[df.str.contains("-")]
 
         df_lemma_hyphens = df_hyphens.map(
-            lambda x: "-".join([
-                self.morphys[self.morphys["form"] == y]["lemma"].tolist()[0] if y in self.morphys[
-                    "form"].tolist() else y for y in x.split("-")
-            ])
+            lambda x: "-".join(
+                [
+                    self.morphys[self.morphys["form"] == y]["lemma"].tolist()[
+                        0
+                    ]
+                    if y in self.morphys["form"].tolist()
+                    else y
+                    for y in x.split("-")
+                ]
+            )
         ).rename("lemma")
         morphys_exp = pd.concat(
-            [self.morphys, pd.concat([df_hyphens, df_lemma_hyphens], axis=1)]).drop_duplicates(subset=["form"]
-                                                                                               )
+            [self.morphys, pd.concat([df_hyphens, df_lemma_hyphens], axis=1)]
+        ).drop_duplicates(subset=["form"])
 
         ## lemmatize with expanded morphys dict
-        df = pd.merge(left=df,
-                      right=morphys_exp,
-                      how="left")
+        df = pd.merge(left=df, right=morphys_exp, how="left")
 
         df = df["lemma"].fillna(df["form"])
 
@@ -142,7 +167,9 @@ class PreprocessorGerman:
         """
         return course_descriptions.map(lambda x: x.map(str.lower))
 
-    def preprocess_course_descriptions(self, course_descriptions: List[str]) -> List[List[str]]:
+    def preprocess_course_descriptions(
+        self, course_descriptions: List[str]
+    ) -> List[List[str]]:
         """
         Preprocesses a list of course descriptions using the following pipeline:
         - tokenize
@@ -157,25 +184,38 @@ class PreprocessorGerman:
         :rtype: List[List[str]]
         """
         # convert to series
-        processed_course_descriptions = self.convert_to_series(course_descriptions)
+        processed_course_descriptions = self.convert_to_series(
+            course_descriptions
+        )
 
         # tokenize
-        processed_course_descriptions = self.tokenize(processed_course_descriptions)
+        processed_course_descriptions = self.tokenize(
+            processed_course_descriptions
+        )
 
         # remove punctuation
-        processed_course_descriptions = self.remove_punctuation(processed_course_descriptions)
+        processed_course_descriptions = self.remove_punctuation(
+            processed_course_descriptions
+        )
 
         # remove numeric tokens
-        processed_course_descriptions = self.remove_numeric_tokens(processed_course_descriptions)
+        processed_course_descriptions = self.remove_numeric_tokens(
+            processed_course_descriptions
+        )
 
         # remove stopwords
-        processed_course_descriptions = self.remove_stopwords(processed_course_descriptions)
+        processed_course_descriptions = self.remove_stopwords(
+            processed_course_descriptions
+        )
 
         # lemmatize
-        processed_course_descriptions = self.lemmatize_morphys_fast(processed_course_descriptions)
+        processed_course_descriptions = self.lemmatize_morphys_fast(
+            processed_course_descriptions
+        )
 
         # lowercase
-        processed_course_descriptions = self.lowercase(processed_course_descriptions)
+        processed_course_descriptions = self.lowercase(
+            processed_course_descriptions
+        )
 
         return processed_course_descriptions.map(pd.Series.tolist).tolist()
-

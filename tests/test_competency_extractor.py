@@ -1,9 +1,11 @@
-from app.annotizer import Annotizer
+from app.competency_extractors.competency_extractor import (
+    PaperCompetencyExtractor,
+)
 
 
 def test_annotize():
-    annotizer = Annotizer()
-    competencies = annotizer.annotize(
+    competencyExtractor = PaperCompetencyExtractor()
+    competencies = competencyExtractor.extract_competencies(
         "Musikpersonal verwalten ist ein anstrengender Skill. Es ist aber sehr hilfreich."
     )
 
@@ -27,7 +29,7 @@ def test_annotize2():
 
         Aus Gründen der Aktualität können kurzfristig weitere Themen aufgenommen werden."""
 
-    annotizer = Annotizer()
-    competencies = annotizer.annotize(course_description)
+    competencyExtractor = PaperCompetencyExtractor()
+    competencies = competencyExtractor.extract_competencies(course_description)
 
     assert len(competencies) == 3
