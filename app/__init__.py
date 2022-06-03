@@ -66,25 +66,58 @@ def create_course():
 
 @app.route("/courses", methods=["GET", "HEAD"])
 def retrieve_courses():
+
+    competency_id = None
+    if request.headers.get("Content-Type") == "application/json":
+        competency_id = json.loads(request.data).get("competencyId")
+
     db = GraphDatabaseConnection()
-    try:
-        courses = db.retrieve_all_courses()
-    except RetrievingCourseFailed as e:
-        return Response(f"error: {e}", status=400, mimetype="application/json")
-    db.close()
+
+    # in case the request body contains a competency_id, filter courses
+    if not competency_id:
+        try:
+            courses = db.retrieve_all_courses()
+        except RetrievingCourseFailed as e:
+            return Response(
+                f"error: {e}", status=400, mimetype="application/json"
+            )
+        db.close()
+    else:
+        try:
+            courses = db.find_courses_by_competency(competency_id)
+        except RetrievingCourseFailed as e:
+            return Response(
+                f"error: {e}", status=400, mimetype="application/json"
+            )
+        db.close()
 
     return jsonify(courses)
 
 
 @app.route("/competencies", methods=["GET", "HEAD"])
 def retrieve_competencies():
-    db = GraphDatabaseConnection()
-    try:
-        competencies = db.retrieve_all_competencies()
-    except RetrievingCompetencyFailed as e:
-        return Response(f"error: {e}", status=400, mimetype="application/json")
-    db.close()
+    course_id = None
+    if request.headers.get("Content-Type") == "application/json":
+        course_id = json.loads(request.data).get("courseId")
 
+    db = GraphDatabaseConnection()
+
+    if not course_id:
+        try:
+            competencies = db.retrieve_all_competencies()
+        except RetrievingCompetencyFailed as e:
+            return Response(
+                f"error: {e}", status=400, mimetype="application/json"
+            )
+        db.close()
+    else:
+        try:
+            competencies = db.find_competencies_by_course(course_id)
+        except RetrievingCompetencyFailed as e:
+            return Response(
+                f"error: {e}", status=400, mimetype="application/json"
+            )
+        db.close()
     return jsonify(competencies)
 
 
