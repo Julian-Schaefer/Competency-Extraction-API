@@ -67,9 +67,7 @@ def create_course():
 @app.route("/courses", methods=["GET", "HEAD"])
 def retrieve_courses():
 
-    competency_id = None
-    if request.headers.get("Content-Type") == "application/json":
-        competency_id = json.loads(request.data).get("competencyId")
+    competency_id = request.args.get("competencyId")
 
     db = GraphDatabaseConnection()
 
@@ -84,7 +82,7 @@ def retrieve_courses():
         db.close()
     else:
         try:
-            courses = db.find_courses_by_competency(competency_id)
+            courses = db.find_courses_by_competency(int(competency_id))
         except RetrievingCourseFailed as e:
             return Response(
                 f"error: {e}", status=400, mimetype="application/json"
@@ -96,9 +94,7 @@ def retrieve_courses():
 
 @app.route("/competencies", methods=["GET", "HEAD"])
 def retrieve_competencies():
-    course_id = None
-    if request.headers.get("Content-Type") == "application/json":
-        course_id = json.loads(request.data).get("courseId")
+    course_id = request.args.get("courseId")
 
     db = GraphDatabaseConnection()
 
@@ -112,7 +108,7 @@ def retrieve_competencies():
         db.close()
     else:
         try:
-            competencies = db.find_competencies_by_course(course_id)
+            competencies = db.find_competencies_by_course(int(course_id))
         except RetrievingCompetencyFailed as e:
             return Response(
                 f"error: {e}", status=400, mimetype="application/json"
