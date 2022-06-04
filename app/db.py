@@ -198,7 +198,7 @@ class GraphDatabaseConnection:
         except ClientError as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
 
-        if not result.data():
+        if not result:
             return None
 
         courses = [
