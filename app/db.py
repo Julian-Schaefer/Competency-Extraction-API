@@ -141,7 +141,7 @@ class GraphDatabaseConnection:
                     )
 
     def create_course(
-        self, course_description: str, associated_competencies_ids
+        self, course_description: str, associated_competencies
     ) -> str:
         """
         Create course
@@ -150,7 +150,7 @@ class GraphDatabaseConnection:
 
         Parameters:
             course_description: course description as string
-            associated_competencies_ids: associated competencies for this course description
+            associated_competencies: associated competencies for this course description
 
         Raises: CourseInsertionFailed if insertion into DB failed
 
@@ -158,6 +158,12 @@ class GraphDatabaseConnection:
         course name and node as string
 
         """
+        associated_competencies_ids = [
+            competency[0] for competency in associated_competencies
+        ]
+
+        associated_competencies_ids = list(set(associated_competencies_ids))
+
         with self.driver.session() as session:
             session.write_transaction(
                 self._create_course_transaction,
