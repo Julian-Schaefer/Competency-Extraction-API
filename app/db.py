@@ -63,69 +63,82 @@ class GraphDatabaseConnection:
         """
         uri = competency["conceptUri"]
         if not self.retrieve_competency_by_uri(uri):
-            with self.driver.session() as session:
-                session.write_transaction(self._create_competency, competency)
+            self.create_competencies([competency])
+
+    def create_competencies(self, competencies) -> None:
+        """
+        Create competencies
+
+        Insert competencies with their properties and labels into the db
+
+        Parameters:
+            competencies: List of Competencies with Properties and Labels
+
+        Raises: CompetencyInsertionFailed if insertion into DB failed
+
+        """
+        with self.driver.session() as session:
+            session.write_transaction(self._create_competencies, competencies)
 
     @staticmethod
-    def _create_competency(tx, competency):
-        create_competency_query = "CREATE (com:Competency {conceptType:$conceptType, conceptUri:$conceptUri, skillType:$skillType, description:$description}) RETURN id(com) AS id"
+    def _create_competencies(tx, competencies):
+        for competency in competencies:
+            create_competency_query = "CREATE (com:Competency {conceptType:$conceptType, conceptUri:$conceptUri, competencyType:$competencyType, description:$description}) RETURN id(com) AS id"
 
-        try:
-            result = tx.run(
-                create_competency_query,
-                conceptType=competency["conceptType"],
-                conceptUri=competency["conceptUri"],
-                skillType=competency["skillType"],
-                description=competency["description"],
-            )
-
-            if not result:
-                raise CompetencyInsertionFailed(
-                    "Inserting Competency did not return result."
-                )
-
-            result = result.single()
-            competencyId = result["id"]
-        except ClientError as e:
-            raise CompetencyInsertionFailed(
-                f"{create_competency_query} raised an error: \n {e}"
-            )
-
-        create_label_query = (
-            "CREATE (lab:Label {text:$text, type:$type}) RETURN id(lab) AS id"
-        )
-        create_relation_query = "MATCH (com:Competency) WHERE id(com)=$competencyId MATCH (lab:Label) WHERE id(lab)=$labelId CREATE (com)-[r:IDENTIFIED_BY]->(lab)"
-
-        for label in competency["labels"]:
             try:
                 result = tx.run(
-                    create_label_query,
-                    text=label["text"],
-                    type=label["type"],
+                    create_competency_query,
+                    conceptType=competency["conceptType"],
+                    conceptUri=competency["conceptUri"],
+                    competencyType=competency["competencyType"],
+                    description=competency["description"],
                 )
 
                 if not result:
                     raise CompetencyInsertionFailed(
-                        "Inserting Label did not return result."
+                        "Inserting Competency did not return result."
                     )
 
                 result = result.single()
-                labelId = result["id"]
+                competencyId = result["id"]
             except ClientError as e:
                 raise CompetencyInsertionFailed(
-                    f"{create_label_query} raised an error: \n {e}"
+                    f"{create_competency_query} raised an error: \n {e}"
                 )
 
-            try:
-                tx.run(
-                    create_relation_query,
-                    competencyId=competencyId,
-                    labelId=labelId,
-                )
-            except ClientError as e:
-                raise CompetencyInsertionFailed(
-                    f"{create_relation_query} raised an error: \n {e}"
-                )
+            create_label_query = "CREATE (lab:Label {text:$text, type:$type}) RETURN id(lab) AS id"
+            create_relation_query = "MATCH (com:Competency) WHERE id(com)=$competencyId MATCH (lab:Label) WHERE id(lab)=$labelId CREATE (com)-[r:IDENTIFIED_BY]->(lab)"
+
+            for label in competency["labels"]:
+                try:
+                    result = tx.run(
+                        create_label_query,
+                        text=label["text"],
+                        type=label["type"],
+                    )
+
+                    if not result:
+                        raise CompetencyInsertionFailed(
+                            "Inserting Label did not return result."
+                        )
+
+                    result = result.single()
+                    labelId = result["id"]
+                except ClientError as e:
+                    raise CompetencyInsertionFailed(
+                        f"{create_label_query} raised an error: \n {e}"
+                    )
+
+                try:
+                    tx.run(
+                        create_relation_query,
+                        competencyId=competencyId,
+                        labelId=labelId,
+                    )
+                except ClientError as e:
+                    raise CompetencyInsertionFailed(
+                        f"{create_relation_query} raised an error: \n {e}"
+                    )
 
     def create_course(
         self, course_description: str, associated_competencies_ids

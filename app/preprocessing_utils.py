@@ -219,3 +219,47 @@ class PreprocessorGerman:
         )
 
         return processed_course_descriptions.map(pd.Series.tolist).tolist()
+
+    def preprocess_label(self, label: str) -> List[str]:
+        """
+        Preprocess a label, e.g. for inserting a competency into the database.
+        :param label: A label string
+        :type label: str
+        :return: A List of preprocessed strings in the label
+        :rtype: List[str]
+        """
+        tokens = self.tokenize_label(label)
+        lemmatized_tokens = self.lemmatize_morphys(tokens)
+        lower_lemmatized_tokens = [
+            str.lower(lemma_token) for lemma_token in lemmatized_tokens
+        ]
+        return lower_lemmatized_tokens
+
+    def tokenize_label(self, label: str) -> List[str]:
+        """
+        Tokenize a label.
+        :param label: A label string
+        :type label: str
+        :return: A List of tokenized strings in the label
+        :rtype: List[str]
+        """
+        return nltk.word_tokenize(label, language=self.language)
+
+    def lemmatize_morphys(self, tokens: List[str]) -> List[str]:
+        """
+        Tokenize a list of tokens.
+        :param tokens: A list of tokens
+        :type tokens: List[str]
+        :return: A List of lemmatized strings from the tokens
+        :rtype: List[str]
+        """
+        lemmatized_tokens = []
+        for token in tokens:
+            try:
+                lemma = self.morphys.loc[token]["lemma"]
+            except KeyError:
+                lemma = token
+
+            lemmatized_tokens.append(lemma)
+
+        return lemmatized_tokens

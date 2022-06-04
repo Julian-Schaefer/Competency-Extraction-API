@@ -15,34 +15,42 @@ class Store:
         data_file = pandas.read_csv(os.environ.get("DATA_FILE"))
         data_file["altLabels"] = data_file["altLabels"].astype("string")
 
+        competencies = []
+
         for _, row in data_file.iterrows():
-            lemmatized_label = self.lemmatizer.preprocess_course_descriptions(
-                [row["preferredLabel"]]
-            )[0]
+            preprocessed_label = self.lemmatizer.preprocess_label(
+                row["preferredLabel"]
+            )
             labels = [
-                {"text": " ".join(lemmatized_label), "type": "preferred"}
+                {"text": " ".join(preprocessed_label), "type": "preferred"}
             ]
 
             if not pandas.isna(row["altLabels"]):
                 alt_labels = row["altLabels"].split("\n")
-                lemmatized_labels = (
-                    self.lemmatizer.preprocess_course_descriptions(alt_labels)
-                )
-
-                labels += [
-                    {"text": " ".join(lemmatized_label), "type": "alternative"}
-                    for lemmatized_label in lemmatized_labels
+                preprocessed_labels = [
+                    self.lemmatizer.preprocess_label(alt_label)
+                    for alt_label in alt_labels
                 ]
 
-            skill = {
+                labels += [
+                    {
+                        "text": " ".join(preprocessed_label),
+                        "type": "alternative",
+                    }
+                    for preprocessed_label in preprocessed_labels
+                ]
+
+            competency = {
                 "conceptType": row["conceptType"],
                 "conceptUri": row["conceptUri"],
-                "skillType": row["skillType"],
+                "competencyType": row["skillType"],
                 "description": row["description"],
                 "labels": labels,
             }
 
-            self.db.create_competency(skill)
+            competencies += [competency]
+
+        self.db.create_competencies(competencies)
 
     def check_term(self, term):
         is_found = self.db.find_label_by_term(term)
