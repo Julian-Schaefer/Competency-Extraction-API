@@ -77,7 +77,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CourseBody'
-  /courses:
+  /course:
     get:
       tags:
       - course
@@ -95,7 +95,32 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Course'
-  /competencies:
+  /course/{competencyId}:
+    get:
+      tags:
+      - course
+      summary: Query for courses
+      description: Query for courses
+      operationId: retrieveCoursesByCompetency
+      responses:
+        '400':
+          description: Invalid input
+        '200':
+          description: Query result for courses.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+      parameters:
+      - in: path
+        name: competencyId
+        description: Filter courses by competency
+        required: true
+        schema:
+          $ref: '#/components/schemas/CompetencyId'
+  /competency:
     get:
       tags:
       - competency
@@ -113,6 +138,31 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Competency'
+  /competency/{courseId}:
+    get:
+      tags:
+      - competency
+      summary: Query for competencies
+      description: Query for competencies
+      operationId: retrieveCompetenciesByCourse
+      responses:
+        '400':
+          description: Invalid input
+        '200':
+          description: Query result for competencies.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Competency'
+      parameters:
+      - in: path
+        name: courseId
+        description: Filter competencies by course
+        required: true
+        schema:
+          $ref: '#/components/schemas/CourseId'
   /courseCompetency:
     post:
       tags:
@@ -160,13 +210,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CourseCompetency'
-      requestBody:
-        description: Add a new course and extract competencies
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CourseBody'
+  /initialize:
+    post:
+      tags:
+      - competency
+      summary: Initialize the database with EU-ESCO competencies
+      description: Initialize the database with EU-ESCO competencies
+      operationId: initialize
+      responses:
+        '200':
+          description: Database and Store have been initialized successfully
 components:
   schemas:
     Course:
@@ -177,6 +230,10 @@ components:
           type: string
         body:
           type: string
+    CourseId:
+      properties:
+        course_id:
+          type: integer
     CourseBody:
       properties:
         course_body:
@@ -193,6 +250,10 @@ components:
           type: string
         body:
           type: string
+    CompetencyId:
+      properties:
+        competency_id:
+          type: integer
     CourseCompetency:
       properties:
         course_id:

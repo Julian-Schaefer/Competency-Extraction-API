@@ -769,3 +769,77 @@ class GraphDatabaseConnection:
             raise RetrievingCompetencyFailed(
                 f"{query} raised an error: \n {e}"
             )
+
+    @staticmethod
+    def _find_courses_by_competency(tx, competency_id: int) -> Dict:
+        query = "MATCH (com:Competency)<-[:HAS]-(cou:Course) where id(com)=$id RETURN cou AS course"
+
+        try:
+            result = tx.run(query, id=competency_id)
+
+            if not result:
+                return None
+
+            courses = [record["course"]._properties for record in result]
+            return courses
+        except Exception as e:
+            raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
+
+    def find_courses_by_competency(self, competency_id: int) -> List[Dict]:
+        """Find competencies by course
+
+        Find courses by matching their competency provided by it's ID.
+
+        Parameters:
+            competency_id: id of the competency as integer
+
+        Raises:
+            RetrievingCourseFailed if communication with the database goes wrong
+
+        Returns:
+            Matching courses as list of dicts
+        """
+        with self.driver.session() as session:
+            courses = session.write_transaction(
+                self._find_courses_by_competency, competency_id
+            )
+            return courses
+
+    @staticmethod
+    def _find_competencies_by_course(tx, course_id: int) -> Dict:
+        query = "MATCH (com:Competency)<-[:HAS]-(cou:Course) where id(cou)=$id RETURN com AS competency"
+
+        try:
+            result = tx.run(query, id=course_id)
+
+            if not result:
+                return None
+
+            competencies = [
+                record["competency"]._properties for record in result
+            ]
+            return competencies
+        except Exception as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
+
+    def find_competencies_by_course(self, course_id: int) -> List[Dict]:
+        """Find courses by competency
+
+        Find competencies by matching the course that they are connected to provided by it's ID.
+
+        Parameters:
+            course_id: id of the course as integer
+
+        Raises:
+            RetrievingCompetencyFailed if communication with the database goes wrong
+
+        Returns:
+            Matching competencies as list of dicts
+        """
+        with self.driver.session() as session:
+            competencies = session.write_transaction(
+                self._find_competencies_by_course, course_id
+            )
+            return competencies
