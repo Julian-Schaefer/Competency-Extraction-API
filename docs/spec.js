@@ -28,54 +28,7 @@ var spec = {
     }
   ],
   "paths": {
-    "/competency/{competencyName}": {
-      "post": {
-        "tags": [
-          "competency"
-        ],
-        "summary": "Add a new competency",
-        "description": "Add a new competency",
-        "operationId": "addCompetency",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "competencyName",
-            "description": "Name of competency to be added",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Competency was added successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Competency"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          }
-        },
-        "requestBody": {
-          "description": "Add a new competency",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompetencyBody"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/course/{courseName}": {
+    "/course": {
       "post": {
         "tags": [
           "course"
@@ -83,17 +36,6 @@ var spec = {
         "summary": "Add a new course",
         "description": "Add a new course",
         "operationId": "addCourse",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "courseName",
-            "description": "Name of course to be added",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Course was added successfully.",
@@ -120,9 +62,7 @@ var spec = {
             }
           }
         }
-      }
-    },
-    "/course": {
+      },
       "get": {
         "tags": [
           "course"
@@ -256,79 +196,6 @@ var spec = {
         ]
       }
     },
-    "/courseCompetency": {
-      "post": {
-        "tags": [
-          "relation"
-        ],
-        "summary": "Add a new course and competency relationship",
-        "description": "Add a new course and competency relationship",
-        "operationId": "addCourseCompetency",
-        "responses": {
-          "200": {
-            "description": "Course competency relationship was added successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CourseCompetency"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          }
-        },
-        "requestBody": {
-          "description": "Add a new course",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CourseCompetencyWithoutId"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/course/{courseName}/extract": {
-      "post": {
-        "tags": [
-          "course",
-          "relation"
-        ],
-        "summary": "Add a new course and extract its competencies",
-        "description": "Add a new course and extract its competencies and insert them into the db",
-        "operationId": "addCourseExtract",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "courseName",
-            "description": "Name of course to be added",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Course was added successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CourseCompetency"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          }
-        }
-      }
-    },
     "/initialize": {
       "post": {
         "tags": [
@@ -369,14 +236,7 @@ var spec = {
       },
       "CourseBody": {
         "properties": {
-          "course_body": {
-            "type": "string"
-          }
-        }
-      },
-      "CompetencyBody": {
-        "properties": {
-          "competency_body": {
+          "courseDescription": {
             "type": "string"
           }
         }
@@ -398,44 +258,6 @@ var spec = {
         "properties": {
           "competency_id": {
             "type": "integer"
-          }
-        }
-      },
-      "CourseCompetency": {
-        "properties": {
-          "course_id": {
-            "type": "integer"
-          },
-          "course_name": {
-            "type": "string"
-          },
-          "course_body": {
-            "type": "string"
-          },
-          "competency_id": {
-            "type": "integer"
-          },
-          "competency_name": {
-            "type": "string"
-          },
-          "competency_body": {
-            "type": "string"
-          }
-        }
-      },
-      "CourseCompetencyWithoutId": {
-        "properties": {
-          "course_name": {
-            "type": "string"
-          },
-          "course_body": {
-            "type": "string"
-          },
-          "competency_name": {
-            "type": "string"
-          },
-          "competency_body": {
-            "type": "string"
           }
         }
       }
