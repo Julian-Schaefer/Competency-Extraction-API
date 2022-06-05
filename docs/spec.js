@@ -122,7 +122,7 @@ var spec = {
         }
       }
     },
-    "/courses": {
+    "/course": {
       "get": {
         "tags": [
           "course"
@@ -150,7 +150,46 @@ var spec = {
         }
       }
     },
-    "/competencies": {
+    "/course/{competencyId}": {
+      "get": {
+        "tags": [
+          "course"
+        ],
+        "summary": "Query for courses",
+        "description": "Query for courses",
+        "operationId": "retrieveCoursesByCompetency",
+        "responses": {
+          "200": {
+            "description": "Query result for courses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "competencyId",
+            "description": "Filter courses by competency",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CompetencyId"
+            }
+          }
+        ]
+      }
+    },
+    "/competency": {
       "get": {
         "tags": [
           "competency"
@@ -176,6 +215,45 @@ var spec = {
             "description": "Invalid input"
           }
         }
+      }
+    },
+    "/competency/{courseId}": {
+      "get": {
+        "tags": [
+          "competency"
+        ],
+        "summary": "Query for competencies",
+        "description": "Query for competencies",
+        "operationId": "retrieveCompetenciesByCourse",
+        "responses": {
+          "200": {
+            "description": "Query result for competencies.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Competency"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "courseId",
+            "description": "Filter competencies by course",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CourseId"
+            }
+          }
+        ]
       }
     },
     "/courseCompetency": {
@@ -248,16 +326,20 @@ var spec = {
           "400": {
             "description": "Invalid input"
           }
-        },
-        "requestBody": {
-          "description": "Add a new course and extract competencies",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CourseBody"
-              }
-            }
+        }
+      }
+    },
+    "/initialize": {
+      "post": {
+        "tags": [
+          "competency"
+        ],
+        "summary": "Initialize the database with EU-ESCO competencies",
+        "description": "Initialize the database with EU-ESCO competencies",
+        "operationId": "initialize",
+        "responses": {
+          "200": {
+            "description": "Database and Store have been initialized successfully"
           }
         }
       }
@@ -275,6 +357,13 @@ var spec = {
           },
           "body": {
             "type": "string"
+          }
+        }
+      },
+      "CourseId": {
+        "properties": {
+          "course_id": {
+            "type": "integer"
           }
         }
       },
@@ -302,6 +391,13 @@ var spec = {
           },
           "body": {
             "type": "string"
+          }
+        }
+      },
+      "CompetencyId": {
+        "properties": {
+          "competency_id": {
+            "type": "integer"
           }
         }
       },

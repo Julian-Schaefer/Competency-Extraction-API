@@ -63,72 +63,85 @@ class GraphDatabaseConnection:
         """
         uri = competency["conceptUri"]
         if not self.retrieve_competency_by_uri(uri):
-            with self.driver.session() as session:
-                session.write_transaction(self._create_competency, competency)
+            self.create_competencies([competency])
+
+    def create_competencies(self, competencies) -> None:
+        """
+        Create competencies
+
+        Insert competencies with their properties and labels into the db
+
+        Parameters:
+            competencies: List of Competencies with Properties and Labels
+
+        Raises: CompetencyInsertionFailed if insertion into DB failed
+
+        """
+        with self.driver.session() as session:
+            session.write_transaction(self._create_competencies, competencies)
 
     @staticmethod
-    def _create_competency(tx, competency):
-        create_competency_query = "CREATE (com:Competency {conceptType:$conceptType, conceptUri:$conceptUri, skillType:$skillType, description:$description}) RETURN id(com) AS id"
+    def _create_competencies(tx, competencies):
+        for competency in competencies:
+            create_competency_query = "CREATE (com:Competency {conceptType:$conceptType, conceptUri:$conceptUri, competencyType:$competencyType, description:$description}) RETURN id(com) AS id"
 
-        try:
-            result = tx.run(
-                create_competency_query,
-                conceptType=competency["conceptType"],
-                conceptUri=competency["conceptUri"],
-                skillType=competency["skillType"],
-                description=competency["description"],
-            )
-
-            if not result:
-                raise CompetencyInsertionFailed(
-                    "Inserting Competency did not return result."
-                )
-
-            result = result.single()
-            competencyId = result["id"]
-        except ClientError as e:
-            raise CompetencyInsertionFailed(
-                f"{create_competency_query} raised an error: \n {e}"
-            )
-
-        create_label_query = (
-            "CREATE (lab:Label {text:$text, type:$type}) RETURN id(lab) AS id"
-        )
-        create_relation_query = "MATCH (com:Competency) WHERE id(com)=$competencyId MATCH (lab:Label) WHERE id(lab)=$labelId CREATE (com)-[r:IDENTIFIED_BY]->(lab)"
-
-        for label in competency["labels"]:
             try:
                 result = tx.run(
-                    create_label_query,
-                    text=label["text"],
-                    type=label["type"],
+                    create_competency_query,
+                    conceptType=competency["conceptType"],
+                    conceptUri=competency["conceptUri"],
+                    competencyType=competency["competencyType"],
+                    description=competency["description"],
                 )
 
                 if not result:
                     raise CompetencyInsertionFailed(
-                        "Inserting Label did not return result."
+                        "Inserting Competency did not return result."
                     )
 
                 result = result.single()
-                labelId = result["id"]
+                competencyId = result["id"]
             except ClientError as e:
                 raise CompetencyInsertionFailed(
-                    f"{create_label_query} raised an error: \n {e}"
+                    f"{create_competency_query} raised an error: \n {e}"
                 )
 
-            try:
-                tx.run(
-                    create_relation_query,
-                    competencyId=competencyId,
-                    labelId=labelId,
-                )
-            except ClientError as e:
-                raise CompetencyInsertionFailed(
-                    f"{create_relation_query} raised an error: \n {e}"
-                )
+            create_label_query = "CREATE (lab:Label {text:$text, type:$type}) RETURN id(lab) AS id"
+            create_relation_query = "MATCH (com:Competency) WHERE id(com)=$competencyId MATCH (lab:Label) WHERE id(lab)=$labelId CREATE (com)-[r:IDENTIFIED_BY]->(lab)"
+
+            for label in competency["labels"]:
+                try:
+                    result = tx.run(
+                        create_label_query,
+                        text=label["text"],
+                        type=label["type"],
+                    )
+
+                    if not result:
+                        raise CompetencyInsertionFailed(
+                            "Inserting Label did not return result."
+                        )
+
+                    result = result.single()
+                    labelId = result["id"]
+                except ClientError as e:
+                    raise CompetencyInsertionFailed(
+                        f"{create_label_query} raised an error: \n {e}"
+                    )
+
+                try:
+                    tx.run(
+                        create_relation_query,
+                        competencyId=competencyId,
+                        labelId=labelId,
+                    )
+                except ClientError as e:
+                    raise CompetencyInsertionFailed(
+                        f"{create_relation_query} raised an error: \n {e}"
+                    )
 
     def create_course(
-        self, course_description: str, associated_competencies_ids
+        self, course_description: str, associated_competencies
     ) -> str:
         """
         Create course
@@ -137,7 +150,7 @@ class GraphDatabaseConnection:
 
         Parameters:
             course_description: course description as string
-            associated_competencies_ids: associated competencies for this course description
+            associated_competencies: associated competencies for this course description
 
         Raises: CourseInsertionFailed if insertion into DB failed
 
@@ -145,6 +158,12 @@ class GraphDatabaseConnection:
         course name and node as string
 
         """
+        associated_competencies_ids = [
+            competency[0] for competency in associated_competencies
+        ]
+
+        associated_competencies_ids = list(set(associated_competencies_ids))
+
         with self.driver.session() as session:
             session.write_transaction(
                 self._create_course_transaction,
@@ -750,3 +769,77 @@ class GraphDatabaseConnection:
             raise RetrievingCompetencyFailed(
                 f"{query} raised an error: \n {e}"
             )
+
+    @staticmethod
+    def _find_courses_by_competency(tx, competency_id: int) -> Dict:
+        query = "MATCH (com:Competency)<-[:HAS]-(cou:Course) where id(com)=$id RETURN cou AS course"
+
+        try:
+            result = tx.run(query, id=competency_id)
+
+            if not result:
+                return None
+
+            courses = [record["course"]._properties for record in result]
+            return courses
+        except Exception as e:
+            raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
+
+    def find_courses_by_competency(self, competency_id: int) -> List[Dict]:
+        """Find competencies by course
+
+        Find courses by matching their competency provided by it's ID.
+
+        Parameters:
+            competency_id: id of the competency as integer
+
+        Raises:
+            RetrievingCourseFailed if communication with the database goes wrong
+
+        Returns:
+            Matching courses as list of dicts
+        """
+        with self.driver.session() as session:
+            courses = session.write_transaction(
+                self._find_courses_by_competency, competency_id
+            )
+            return courses
+
+    @staticmethod
+    def _find_competencies_by_course(tx, course_id: int) -> Dict:
+        query = "MATCH (com:Competency)<-[:HAS]-(cou:Course) where id(cou)=$id RETURN com AS competency"
+
+        try:
+            result = tx.run(query, id=course_id)
+
+            if not result:
+                return None
+
+            competencies = [
+                record["competency"]._properties for record in result
+            ]
+            return competencies
+        except Exception as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
+
+    def find_competencies_by_course(self, course_id: int) -> List[Dict]:
+        """Find courses by competency
+
+        Find competencies by matching the course that they are connected to provided by it's ID.
+
+        Parameters:
+            course_id: id of the course as integer
+
+        Raises:
+            RetrievingCompetencyFailed if communication with the database goes wrong
+
+        Returns:
+            Matching competencies as list of dicts
+        """
+        with self.driver.session() as session:
+            competencies = session.write_transaction(
+                self._find_competencies_by_course, course_id
+            )
+            return competencies
