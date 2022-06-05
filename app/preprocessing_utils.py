@@ -233,7 +233,13 @@ class PreprocessorGerman:
         lower_lemmatized_tokens = [
             str.lower(lemma_token) for lemma_token in lemmatized_tokens
         ]
-        return lower_lemmatized_tokens
+
+        cleaned_lemmatized_tokens = [
+            token
+            for token in lower_lemmatized_tokens
+            if not token in self.stopwords
+        ]
+        return cleaned_lemmatized_tokens
 
     def tokenize_label(self, label: str) -> List[str]:
         """

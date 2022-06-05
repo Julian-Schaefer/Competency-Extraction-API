@@ -3,8 +3,7 @@
 ## Getting started
 Run the following in root folder to start the system:
 
-- `docker-compose up` Start Neo4J Database and Server
-- `docker-compose up --build` Rebuild Server and then start Neo4J Database and Server (if something changed)
+- `docker-compose up --build` Build Server and then start Neo4J Database and Server
 - `curl -X POST http://localhost:5000/initialize` Initiliaze the Database and Store (takes around 5 Minutes)
 
 
