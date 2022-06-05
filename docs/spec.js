@@ -122,7 +122,7 @@ var spec = {
         }
       }
     },
-    "/courses": {
+    "/course": {
       "get": {
         "tags": [
           "course"
@@ -150,7 +150,7 @@ var spec = {
         }
       }
     },
-    "/courses/{competencyId}": {
+    "/course/{competencyId}": {
       "get": {
         "tags": [
           "course"
@@ -189,7 +189,7 @@ var spec = {
         ]
       }
     },
-    "/competencies": {
+    "/competency": {
       "get": {
         "tags": [
           "competency"
@@ -217,7 +217,7 @@ var spec = {
         }
       }
     },
-    "/competencies/{courseId}": {
+    "/competency/{courseId}": {
       "get": {
         "tags": [
           "competency"

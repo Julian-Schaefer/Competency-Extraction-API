@@ -64,9 +64,8 @@ def create_course():
     return jsonify(associated_competencies)
 
 
-@app.route("/courses", methods=["GET", "HEAD"])
-def retrieve_courses():
-
+@app.route("/course", methods=["GET"])
+def retrieve_course():
     competency_id = request.args.get("competencyId")
 
     db = GraphDatabaseConnection()
@@ -79,7 +78,6 @@ def retrieve_courses():
             return Response(
                 f"error: {e}", status=400, mimetype="application/json"
             )
-        db.close()
     else:
         try:
             courses = db.find_courses_by_competency(int(competency_id))
@@ -87,13 +85,14 @@ def retrieve_courses():
             return Response(
                 f"error: {e}", status=400, mimetype="application/json"
             )
-        db.close()
+
+    db.close()
 
     return jsonify(courses)
 
 
-@app.route("/competencies", methods=["GET", "HEAD"])
-def retrieve_competencies():
+@app.route("/competency", methods=["GET"])
+def retrieve_competency():
     course_id = request.args.get("courseId")
 
     db = GraphDatabaseConnection()
@@ -105,7 +104,6 @@ def retrieve_competencies():
             return Response(
                 f"error: {e}", status=400, mimetype="application/json"
             )
-        db.close()
     else:
         try:
             competencies = db.find_competencies_by_course(int(course_id))
@@ -113,7 +111,9 @@ def retrieve_competencies():
             return Response(
                 f"error: {e}", status=400, mimetype="application/json"
             )
-        db.close()
+
+    db.close()
+
     return jsonify(competencies)
 
 

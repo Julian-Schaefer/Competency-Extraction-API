@@ -77,7 +77,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CourseBody'
-  /courses:
+  /course:
     get:
       tags:
       - course
@@ -95,7 +95,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Course'
-  /courses/{competencyId}:
+  /course/{competencyId}:
     get:
       tags:
       - course
@@ -120,7 +120,7 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/CompetencyId'
-  /competencies:
+  /competency:
     get:
       tags:
       - competency
@@ -138,7 +138,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Competency'
-  /competencies/{courseId}:
+  /competency/{courseId}:
     get:
       tags:
       - competency
