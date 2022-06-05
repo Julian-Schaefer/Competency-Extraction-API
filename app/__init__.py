@@ -9,14 +9,14 @@ from app.store import Store
 from app.competency_extractors.competency_extractor import (
     PaperCompetencyExtractor,
 )
-
+import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 
 
 @app.route("/")
 def hello():
-    return "<p>Welcome to our API server, you can query courses and competencies here.</p>"
+    return "<h1>Welcome!</h1><p>Welcome to our API server, you can query courses and competencies here.</p>"
 
 
 @app.route("/initialize", methods=["POST"])
@@ -28,37 +28,76 @@ def initialize():
 
 @app.route("/course", methods=["POST"])
 def create_course():
-    if request.headers.get("Content-Type") != "application/json":
-        return Response(
-            "Content-Type not supported! Expected type application/json",
-            status=400,
-            mimetype="application/json",
-        )
-    course_description = json.loads(request.data).get("courseDescription")
+    if request.headers.get("Content-Type") == "application/json":
+        course_description = json.loads(request.data).get("courseDescription")
 
-    if not course_description:
-        return Response(
-            "Body 'course_description' is missing",
-            status=400,
-            mimetype="application/json",
-        )
+        if not course_description:
+            return Response(
+                "Body 'course_description' is missing",
+                status=400,
+                mimetype="application/json",
+            )
 
-    competencyExtractor = PaperCompetencyExtractor()
-    db = GraphDatabaseConnection()
-    try:
+        competencyExtractor = PaperCompetencyExtractor()
+
         associated_competencies = competencyExtractor.extract_competencies(
             course_description
         )
-        associated_competencies_ids = [
-            competency[0] for competency in associated_competencies
-        ]
 
-        db.create_course(course_description, associated_competencies_ids)
-    except CourseInsertionFailed as e:
-        return Response(f"error: {e}", status=400, mimetype="application/json")
-    db.close()
+        db = GraphDatabaseConnection()
+        try:
+            db.create_course(course_description, associated_competencies)
+        except CourseInsertionFailed as e:
+            return Response(
+                f"error: {e}", status=400, mimetype="application/json"
+            )
+        db.close()
 
-    return jsonify(associated_competencies)
+        return jsonify(associated_competencies)
+    elif request.headers.get("Content-Type").startswith("multipart/form-data"):
+        try:
+            courses_file = request.files["courses"]
+
+            courses_xml = ET.parse(
+                courses_file.stream, parser=ET.XMLParser(encoding="utf-8")
+            )
+            courses = courses_xml.findall(".//COURSE")
+        except:
+            return Response(
+                "An error occured while reading the file. Please make sure to upload a correctly formatted XML file named as 'courses'.",
+                status=400,
+                mimetype="application/json",
+            )
+
+        if len(courses) > 0:
+            competencyExtractor = PaperCompetencyExtractor()
+            db = GraphDatabaseConnection()
+
+            for course in courses:
+                course_description = course.find("CS_DESC_LONG").text
+
+                associated_competencies = (
+                    competencyExtractor.extract_competencies(
+                        course_description
+                    )
+                )
+
+                try:
+                    db.create_course(
+                        course_description, associated_competencies
+                    )
+                except CourseInsertionFailed as e:
+                    return Response(
+                        f"error: {e}", status=400, mimetype="application/json"
+                    )
+
+            db.close()
+    else:
+        return Response(
+            "Content-Type not supported! Expected type application/json or multipart/form-data",
+            status=400,
+            mimetype="application/json",
+        )
 
 
 @app.route("/course", methods=["GET"])
