@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return "<p>Welcome to our API server, you can query courses and competencies here.</p>"
+    return "<h1>Welcome!</h1><p>Welcome to our API server, you can query courses and competencies here.</p>"
 
 
 @app.route("/initialize", methods=["POST"])
@@ -58,12 +58,19 @@ def create_course():
 
         return jsonify(associated_competencies)
     elif request.headers.get("Content-Type").startswith("multipart/form-data"):
-        courses_file = request.files["courses"]
+        try:
+            courses_file = request.files["courses"]
 
-        courses_xml = ET.parse(
-            courses_file.stream, parser=ET.XMLParser(encoding="utf-8")
-        )
-        courses = courses_xml.findall(".//COURSE")
+            courses_xml = ET.parse(
+                courses_file.stream, parser=ET.XMLParser(encoding="utf-8")
+            )
+            courses = courses_xml.findall(".//COURSE")
+        except:
+            return Response(
+                "An error occured while reading the file. Please make sure to upload a correctly formatted XML file named as 'courses'.",
+                status=400,
+                mimetype="application/json",
+            )
 
         if len(courses) > 0:
             competencyExtractor = PaperCompetencyExtractor()

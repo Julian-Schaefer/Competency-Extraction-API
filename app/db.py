@@ -154,9 +154,6 @@ class GraphDatabaseConnection:
 
         Raises: CourseInsertionFailed if insertion into DB failed
 
-        Returns:
-        course name and node as string
-
         """
         associated_competencies_ids = [
             competency[0] for competency in associated_competencies
