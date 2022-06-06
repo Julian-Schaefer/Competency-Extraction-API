@@ -40,91 +40,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CourseBody'
+  /courses:
     get:
       tags:
       - course
       summary: Query for courses
       description: Query for courses
       operationId: retrieveCourses
-      responses:
-        '400':
-          description: Invalid input
-        '200':
-          description: Query result for courses.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Course'
-  /course/{competencyId}:
-    get:
-      tags:
-      - course
-      summary: Query for courses
-      description: Query for courses
-      operationId: retrieveCoursesByCompetency
-      responses:
-        '400':
-          description: Invalid input
-        '200':
-          description: Query result for courses.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Course'
       parameters:
-      - in: path
+      - in: query
         name: competencyId
-        description: Filter courses by competency
-        required: true
+        description: Filter courses by competency (optional)
+        required: false
         schema:
-          $ref: '#/components/schemas/CompetencyId'
-  /competency:
-    get:
-      tags:
-      - competency
-      summary: Query for competencies
-      description: Query for competencies
-      operationId: retrieveCompetencies
+          type: integer
       responses:
         '400':
           description: Invalid input
         '200':
-          description: Query result for competencies.
+          description: Query result for courses.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Competency'
-  /competency/{courseId}:
-    get:
-      tags:
-      - competency
-      summary: Query for competencies
-      description: Query for competencies
-      operationId: retrieveCompetenciesByCourse
-      responses:
-        '400':
-          description: Invalid input
-        '200':
-          description: Query result for competencies.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Competency'
-      parameters:
-      - in: path
-        name: courseId
-        description: Filter competencies by course
-        required: true
-        schema:
-          $ref: '#/components/schemas/CourseId'
+                  $ref: '#/components/schemas/Course'
   /initialize:
     post:
       tags:
@@ -135,6 +75,31 @@ paths:
       responses:
         '200':
           description: Database and Store have been initialized successfully!
+  /competency:
+    get:
+      tags:
+      - competency
+      summary: Query for competencies
+      description: Query for competencies
+      operationId: retrieveCompetencies
+      parameters:
+      - in: query
+        name: courseId
+        description: Filter competencies by course
+        required: false
+        schema:
+          type: integer
+      responses:
+        '400':
+          description: Invalid input
+        '200':
+          description: Query result for competencies.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Competency'
 components:
   schemas:
     CourseAddedSuccess:
@@ -151,10 +116,6 @@ components:
           type: integer
         description:
           type: string
-    CourseId:
-      properties:
-        course_id:
-          type: integer
     CourseBody:
       properties:
         courseDescription:
@@ -171,7 +132,3 @@ components:
           type: string
         description:
           type: string
-    CompetencyId:
-      properties:
-        competency_id:
-          type: integer

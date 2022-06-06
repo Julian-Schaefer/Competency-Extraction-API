@@ -124,7 +124,7 @@ def create_course():
         )
 
 
-@app.route("/course", methods=["GET"])
+@app.route("/courses", methods=["GET"])
 def retrieve_course():
     competency_id = request.args.get("competencyId")
 
@@ -148,7 +148,7 @@ def retrieve_course():
 
     db.close()
 
-    return jsonify(courses)
+    return jsonify([course.toJSON() for course in courses])
 
 
 @app.route("/competency", methods=["GET"])
@@ -174,4 +174,4 @@ def retrieve_competency():
 
     db.close()
 
-    return jsonify(competencies)
+    return jsonify([competency.toJSON() for competency in competencies])
