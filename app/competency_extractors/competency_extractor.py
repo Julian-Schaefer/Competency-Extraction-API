@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict
 from typing import List, Dict
+from app.models import Competency
 from app.store import Store
 
 
@@ -42,7 +43,7 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
 
     def extract_competencies(
         self, course_description: str
-    ) -> List[Optional[Dict]]:
+    ) -> List[Competency]:
         tt = self.lemmatizer.preprocess_course_descriptions(
             [course_description]
         )[0]

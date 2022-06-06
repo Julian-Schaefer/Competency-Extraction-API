@@ -16,6 +16,7 @@ nltk = "*"
 hanta = "*"
 lxml = "*"
 python-dotenv = "*"
+flask-swagger-ui = "*"
 
 [dev-packages]
 black = "*"

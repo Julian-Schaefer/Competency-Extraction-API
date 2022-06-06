@@ -10,8 +10,21 @@ from app.competency_extractors.competency_extractor import (
     PaperCompetencyExtractor,
 )
 import xml.etree.ElementTree as ET
+from flask_swagger_ui import get_swaggerui_blueprint
 
-app = Flask(__name__)
+
+app = Flask(__name__, static_folder="../docs", static_url_path="/docs")
+
+
+SWAGGER_URL = "/api/docs"  # URL for exposing Swagger UI (without trailing '/')
+API_DEFINITION_FILE = "../../docs/api_spec_swagger.yml"  # Our API Definition
+
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL,  # Swagger UI static files will be mapped to '{SWAGGER_URL}/dist/'
+    API_DEFINITION_FILE,
+)
+
+app.register_blueprint(swaggerui_blueprint)
 
 
 @app.route("/")
@@ -46,14 +59,24 @@ def create_course():
 
         db = GraphDatabaseConnection()
         try:
-            db.create_course(course_description, associated_competencies)
+            course = db.create_course(
+                course_description, associated_competencies
+            )
         except CourseInsertionFailed as e:
             return Response(
                 f"error: {e}", status=400, mimetype="application/json"
             )
         db.close()
 
-        return jsonify(associated_competencies)
+        return jsonify(
+            {
+                "course": course.toJSON(),
+                "competencies": [
+                    competency.toJSON()
+                    for competency in associated_competencies
+                ],
+            }
+        )
     elif request.headers.get("Content-Type").startswith("multipart/form-data"):
         try:
             courses_file = request.files["courses"]
@@ -92,6 +115,7 @@ def create_course():
                     )
 
             db.close()
+            return "Imported Courses from XML File successfully!"
     else:
         return Response(
             "Content-Type not supported! Expected type application/json or multipart/form-data",
@@ -100,7 +124,7 @@ def create_course():
         )
 
 
-@app.route("/course", methods=["GET"])
+@app.route("/courses", methods=["GET"])
 def retrieve_course():
     competency_id = request.args.get("competencyId")
 
@@ -124,7 +148,7 @@ def retrieve_course():
 
     db.close()
 
-    return jsonify(courses)
+    return jsonify([course.toJSON() for course in courses])
 
 
 @app.route("/competency", methods=["GET"])
@@ -150,4 +174,4 @@ def retrieve_competency():
 
     db.close()
 
-    return jsonify(competencies)
+    return jsonify([competency.toJSON() for competency in competencies])
