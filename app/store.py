@@ -2,6 +2,7 @@ import os
 from app.db import GraphDatabaseConnection
 import pandas
 from app.preprocessing_utils import PreprocessorGerman
+from app.models import Competency, Label
 
 
 class Store:
@@ -22,7 +23,7 @@ class Store:
                 row["preferredLabel"]
             )
             labels = [
-                {"text": " ".join(preprocessed_label), "type": "preferred"}
+                Label(text=" ".join(preprocessed_label), type="preferred")
             ]
 
             if not pandas.isna(row["altLabels"]):
@@ -33,20 +34,19 @@ class Store:
                 ]
 
                 labels += [
-                    {
-                        "text": " ".join(preprocessed_label),
-                        "type": "alternative",
-                    }
+                    Label(
+                        text=" ".join(preprocessed_label), type="alternative"
+                    )
                     for preprocessed_label in preprocessed_labels
                 ]
 
-            competency = {
-                "conceptType": row["conceptType"],
-                "conceptUri": row["conceptUri"],
-                "competencyType": row["skillType"],
-                "description": row["description"],
-                "labels": labels,
-            }
+            competency = Competency(
+                row["conceptType"],
+                row["conceptUri"],
+                row["skillType"],
+                row["description"],
+                labels=labels,
+            )
 
             competencies += [competency]
 

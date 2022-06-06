@@ -59,14 +59,24 @@ def create_course():
 
         db = GraphDatabaseConnection()
         try:
-            db.create_course(course_description, associated_competencies)
+            course = db.create_course(
+                course_description, associated_competencies
+            )
         except CourseInsertionFailed as e:
             return Response(
                 f"error: {e}", status=400, mimetype="application/json"
             )
         db.close()
 
-        return jsonify(associated_competencies)
+        return jsonify(
+            {
+                "course": course.toJSON(),
+                "competencies": [
+                    competency.toJSON()
+                    for competency in associated_competencies
+                ],
+            }
+        )
     elif request.headers.get("Content-Type").startswith("multipart/form-data"):
         try:
             courses_file = request.files["courses"]
@@ -105,6 +115,7 @@ def create_course():
                     )
 
             db.close()
+            return "Imported Courses from XML File successfully!"
     else:
         return Response(
             "Content-Type not supported! Expected type application/json or multipart/form-data",
