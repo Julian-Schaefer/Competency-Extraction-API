@@ -5,7 +5,7 @@ import nltk
 import os
 from typing import List
 import numpy as np
-from itertools import groupby
+from itertools import groupby, zip_longest
 
 __data_path__ = os.path.dirname(__file__) + "/lemma_cache_data"
 
@@ -27,7 +27,8 @@ def split_list_by_dot(list_with_dot: List[str]) -> List[List[str]]:
     :rtype: List[List[str]]
     """
     i = (list(g) for _, g in groupby(list_with_dot, key='.'.__ne__))
-    return [a + b if b != ["."] else a for a, b in zip(i, i)]
+    return [a + b if b != ["."] else a for a, b in zip_longest(i, i, fillvalue=[])]
+
 
 class PreprocessorGerman:
     """
@@ -282,3 +283,4 @@ class PreprocessorGerman:
             lemmatized_tokens.append(lemma)
 
         return lemmatized_tokens
+
