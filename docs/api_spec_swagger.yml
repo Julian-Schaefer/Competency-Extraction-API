@@ -32,7 +32,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Course'
+                $ref: '#/components/schemas/CourseAddedSuccess'
       requestBody:
         description: Add a new course
         required: true
@@ -134,16 +134,22 @@ paths:
       operationId: initialize
       responses:
         '200':
-          description: Database and Store have been initialized successfully
+          description: Database and Store have been initialized successfully!
 components:
   schemas:
+    CourseAddedSuccess:
+      properties:
+        course:
+          $ref: '#/components/schemas/Course'
+        competencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competency'
     Course:
       properties:
         id:
           type: integer
-        name:
-          type: string
-        body:
+        description:
           type: string
     CourseId:
       properties:
@@ -157,9 +163,13 @@ components:
       properties:
         id:
           type: integer
-        name:
+        competencyType:
           type: string
-        body:
+        conceptType:
+          type: string
+        conceptUri:
+          type: string
+        description:
           type: string
     CompetencyId:
       properties:
