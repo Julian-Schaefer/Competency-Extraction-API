@@ -3,6 +3,7 @@ from xmlrpc.client import Boolean
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 import os
+from app.models import Competency, Course
 
 
 class CompetencyInsertionFailed(Exception):
@@ -49,7 +50,7 @@ class GraphDatabaseConnection:
     def close(self):
         self.driver.close()
 
-    def create_competency(self, competency) -> None:
+    def create_competency(self, competency: Competency) -> None:
         """
         Create competency
 
@@ -61,11 +62,11 @@ class GraphDatabaseConnection:
         Raises: CompetencyInsertionFailed if insertion into DB failed
 
         """
-        uri = competency["conceptUri"]
+        uri = competency.conceptUri
         if not self.retrieve_competency_by_uri(uri):
             self.create_competencies([competency])
 
-    def create_competencies(self, competencies) -> None:
+    def create_competencies(self, competencies: List[Competency]) -> None:
         """
         Create competencies
 
@@ -81,17 +82,17 @@ class GraphDatabaseConnection:
             session.write_transaction(self._create_competencies, competencies)
 
     @staticmethod
-    def _create_competencies(tx, competencies):
+    def _create_competencies(tx, competencies: List[Competency]):
         for competency in competencies:
             create_competency_query = "CREATE (com:Competency {conceptType:$conceptType, conceptUri:$conceptUri, competencyType:$competencyType, description:$description}) RETURN id(com) AS id"
 
             try:
                 result = tx.run(
                     create_competency_query,
-                    conceptType=competency["conceptType"],
-                    conceptUri=competency["conceptUri"],
-                    competencyType=competency["competencyType"],
-                    description=competency["description"],
+                    conceptType=competency.conceptType,
+                    conceptUri=competency.conceptUri,
+                    competencyType=competency.competencyType,
+                    description=competency.description,
                 )
 
                 if not result:
@@ -109,12 +110,12 @@ class GraphDatabaseConnection:
             create_label_query = "CREATE (lab:Label {text:$text, type:$type}) RETURN id(lab) AS id"
             create_relation_query = "MATCH (com:Competency) WHERE id(com)=$competencyId MATCH (lab:Label) WHERE id(lab)=$labelId CREATE (com)-[r:IDENTIFIED_BY]->(lab)"
 
-            for label in competency["labels"]:
+            for label in competency.labels:
                 try:
                     result = tx.run(
                         create_label_query,
-                        text=label["text"],
-                        type=label["type"],
+                        text=label.text,
+                        type=label.type,
                     )
 
                     if not result:
@@ -142,7 +143,7 @@ class GraphDatabaseConnection:
 
     def create_course(
         self, course_description: str, associated_competencies
-    ) -> str:
+    ) -> Course:
         """
         Create course
 
@@ -156,22 +157,23 @@ class GraphDatabaseConnection:
 
         """
         associated_competencies_ids = [
-            competency[0] for competency in associated_competencies
+            competency.id for competency in associated_competencies
         ]
 
         associated_competencies_ids = list(set(associated_competencies_ids))
 
         with self.driver.session() as session:
-            session.write_transaction(
+            course = session.write_transaction(
                 self._create_course_transaction,
                 course_description,
                 associated_competencies_ids,
             )
+            return course
 
     @staticmethod
     def _create_course_transaction(
         tx, course_description: str, associated_competencies_ids
-    ) -> str:
+    ) -> Course:
         create_course_query = "CREATE (c:Course) SET c.description = $description RETURN id(c) AS id"
         try:
             result = tx.run(
@@ -197,7 +199,9 @@ class GraphDatabaseConnection:
                     f"{create_relation_query} raised an error: \n {e}"
                 )
 
-    def retrieve_all_courses(self) -> List[Optional[Dict]]:
+        return Course(id=course_id, description=course_description)
+
+    def retrieve_all_courses(self) -> List[Course]:
         """
         Retrieve all courses
 
@@ -214,8 +218,8 @@ class GraphDatabaseConnection:
             return course
 
     @staticmethod
-    def _retrieve_all_courses(tx) -> List[Optional[Dict]]:
-        query = "MATCH (c:Course) RETURN [id(c), c.name, c.body] AS result"
+    def _retrieve_all_courses(tx) -> List[Course]:
+        query = "MATCH (c:Course) RETURN c AS result"
         try:
             result = tx.run(
                 query,
@@ -223,20 +227,17 @@ class GraphDatabaseConnection:
         except ClientError as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
 
-        if not result.data():
-            return None
-
         courses = [
-            {
-                "id": c["result"][0],
-                "name": c["result"][1],
-                "body": c["result"][2],
-            }
-            for c in result.data()
+            Course(
+                id=c["result"].id,
+                description=c["result"]._properties["description"],
+            )
+            for c in result
         ]
+
         return courses
 
-    def retrieve_all_competencies(self) -> List[Optional[Dict]]:
+    def retrieve_all_competencies(self) -> List[Competency]:
         """
         Retrieve all competencies
 
@@ -255,8 +256,8 @@ class GraphDatabaseConnection:
             return competencies
 
     @staticmethod
-    def _retrieve_all_competencies(tx) -> List[Optional[Dict]]:
-        query = "MATCH (c:Competency) RETURN [id(c), c.name, c.body] AS result"
+    def _retrieve_all_competencies(tx) -> List[Competency]:
+        query = "MATCH (c:Competency) RETURN c AS competency"
         try:
             result = tx.run(
                 query,
@@ -270,12 +271,16 @@ class GraphDatabaseConnection:
             return None
 
         competencies = [
-            {
-                "id": c["result"][0],
-                "name": c["result"][1],
-                "body": c["result"][2],
-            }
-            for c in result.data()
+            Competency(
+                id=record["competency"].id,
+                competencyType=record["competency"]._properties[
+                    "competencyType"
+                ],
+                conceptType=record["competency"]._properties["conceptType"],
+                conceptUri=record["competency"]._properties["conceptUri"],
+                description=record["competency"]._properties["description"],
+            )
+            for record in result
         ]
         return competencies
 
@@ -726,7 +731,7 @@ class GraphDatabaseConnection:
         except Exception as e:
             raise RetrievingLabelFailed(f"{query} raised an error: \n {e}")
 
-    def find_competency_by_sequence(self, sequence) -> Dict:
+    def find_competency_by_sequence(self, sequence) -> List[Competency]:
         """Find competency by Sequence
 
         Find all competencies by matching their labels to the complete sequence that
@@ -748,7 +753,7 @@ class GraphDatabaseConnection:
             return competencies
 
     @staticmethod
-    def _find_competency_by_sequence(tx, sequence) -> Dict:
+    def _find_competency_by_sequence(tx, sequence) -> List[Competency]:
         query = "MATCH (lab:Label)<-[:IDENTIFIED_BY]-(com:Competency) where lab.text=$sequence RETURN com AS competency"
 
         try:
@@ -758,7 +763,19 @@ class GraphDatabaseConnection:
                 return None
 
             competencies = [
-                (record["competency"].id, record["competency"]._properties)
+                Competency(
+                    id=record["competency"].id,
+                    competencyType=record["competency"]._properties[
+                        "competencyType"
+                    ],
+                    conceptType=record["competency"]._properties[
+                        "conceptType"
+                    ],
+                    conceptUri=record["competency"]._properties["conceptUri"],
+                    description=record["competency"]._properties[
+                        "description"
+                    ],
+                )
                 for record in result
             ]
             return competencies
@@ -768,8 +785,8 @@ class GraphDatabaseConnection:
             )
 
     @staticmethod
-    def _find_courses_by_competency(tx, competency_id: int) -> Dict:
-        query = "MATCH (com:Competency)<-[:HAS]-(cou:Course) where id(com)=$id RETURN cou AS course"
+    def _find_courses_by_competency(tx, competency_id: int) -> List[Course]:
+        query = "MATCH (com:Competency)<-[:MATCHES]-(cou:Course) WHERE id(com)=$id RETURN cou AS course"
 
         try:
             result = tx.run(query, id=competency_id)
@@ -777,12 +794,18 @@ class GraphDatabaseConnection:
             if not result:
                 return None
 
-            courses = [record["course"]._properties for record in result]
+            courses = [
+                Course(
+                    id=record["course"].id,
+                    description=record["course"]._properties["description"],
+                )
+                for record in result
+            ]
             return courses
         except Exception as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
 
-    def find_courses_by_competency(self, competency_id: int) -> List[Dict]:
+    def find_courses_by_competency(self, competency_id: int) -> List[Course]:
         """Find competencies by course
 
         Find courses by matching their competency provided by it's ID.
@@ -804,7 +827,7 @@ class GraphDatabaseConnection:
 
     @staticmethod
     def _find_competencies_by_course(tx, course_id: int) -> Dict:
-        query = "MATCH (com:Competency)<-[:HAS]-(cou:Course) where id(cou)=$id RETURN com AS competency"
+        query = "MATCH (com:Competency)<-[:MATCHES]-(cou:Course) where id(cou)=$id RETURN com AS competency"
 
         try:
             result = tx.run(query, id=course_id)
@@ -813,8 +836,22 @@ class GraphDatabaseConnection:
                 return None
 
             competencies = [
-                record["competency"]._properties for record in result
+                Competency(
+                    id=record["competency"].id,
+                    competencyType=record["competency"]._properties[
+                        "competencyType"
+                    ],
+                    conceptType=record["competency"]._properties[
+                        "conceptType"
+                    ],
+                    conceptUri=record["competency"]._properties["conceptUri"],
+                    description=record["competency"]._properties[
+                        "description"
+                    ],
+                )
+                for record in result
             ]
+
             return competencies
         except Exception as e:
             raise RetrievingCompetencyFailed(
