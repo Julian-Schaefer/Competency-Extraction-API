@@ -14,8 +14,6 @@ tags:
     url: "https://esco.ec.europa.eu/en/classification/skill?uri=http%3A%2F%2Fdata.europa.eu%2Fesco%2Fskill%2FA1.1.0"
 - name: course
   description: Add and query courses
-- name: relation
-  description: Add relationships between courses and competencies
 paths:
   /course:
     post:
