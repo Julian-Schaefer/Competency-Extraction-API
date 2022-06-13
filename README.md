@@ -18,7 +18,7 @@ Use the following commands for development:
 - `pipenv run python -m spacy download en_core_web_sm` To download english spaCy Data
 
 ## API server
-You can find the documentation of our API [here](https://amir-mo1999.github.io/AWT-Project/).
+You can find the documentation of our API at `http://localhost:5000/api/docs` once you have the system up and running.
 
 ## Preprocessing
 To use the preprocessing pipeline use the following code:
