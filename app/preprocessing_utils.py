@@ -26,8 +26,10 @@ def split_list_by_dot(list_with_dot: List[str]) -> List[List[str]]:
     :return: A List of sublists
     :rtype: List[List[str]]
     """
-    i = (list(g) for _, g in groupby(list_with_dot, key='.'.__ne__))
-    return [a + b if b != ["."] else a for a, b in zip_longest(i, i, fillvalue=[])]
+    i = (list(g) for _, g in groupby(list_with_dot, key=".".__ne__))
+    return [
+        a + b if b != ["."] else a for a, b in zip_longest(i, i, fillvalue=[])
+    ]
 
 
 class PreprocessorGerman:
@@ -43,7 +45,7 @@ class PreprocessorGerman:
         )[["form", "lemma"]]
         self.language = "german"
         with open(
-                __data_path__ + "/stopwords-de.txt", "r", encoding="utf-8"
+            __data_path__ + "/stopwords-de.txt", "r", encoding="utf-8"
         ) as f:
             self.stopwords = list(map(str.strip, list(f)))
 
@@ -122,7 +124,7 @@ class PreprocessorGerman:
         )
 
     def lemmatize_morphys_fast(
-            self, course_descriptions: pd.Series
+        self, course_descriptions: pd.Series
     ) -> pd.Series:
         """
         Lemmatize a Series of tokenized course descriptions using the Morphys lookup table.
@@ -182,7 +184,7 @@ class PreprocessorGerman:
         return course_descriptions.map(lambda x: x.map(str.lower))
 
     def preprocess_course_descriptions(
-            self, course_descriptions: List[str]
+        self, course_descriptions: List[str]
     ) -> List[List[str]]:
         """
         Preprocesses a list of course descriptions using the following pipeline:
@@ -234,7 +236,7 @@ class PreprocessorGerman:
 
         return processed_course_descriptions.map(pd.Series.tolist).tolist()
 
-    def get_skills_json(self) -> str:
+    def get_skills_from_file_as_json(self, file) -> str:
         """
         Reads the "skills_de.csv" into a json string and preprocesses the labels of each skill.
         The resulting json string contains a dictionary. The keys are the concept-URIs. Each key has 5 fields:
@@ -252,23 +254,42 @@ class PreprocessorGerman:
         :rtype: str
         """
         # import skills csv as DataFrame
-        df = pd.read_csv(os.path.abspath(os.path.join(os.pardir, "data", "skills_de.csv")),
-                         encoding="utf-8")[["conceptUri", "conceptType", "preferredLabel", "altLabels"]]
+        df = pd.read_csv(file, encoding="utf-8")[
+            [
+                "skillType",
+                "conceptUri",
+                "conceptType",
+                "preferredLabel",
+                "altLabels",
+                "description",
+            ]
+        ]
 
         # Replace new line characters in the altLabels columns with dots
-        df["altLabels"] = df["altLabels"].map(lambda x: x.replace("\n", ". ") if type(x) == str else x)
+        df["altLabels"] = df["altLabels"].map(
+            lambda x: x.replace("\n", ". ") if type(x) == str else x
+        )
 
         # preprocess altLabels
-        df_with_alt_label = df[~df["altLabels"].isna()][["conceptUri", "altLabels"]].reset_index(drop=True)
+        df_with_alt_label = df[~df["altLabels"].isna()][
+            ["conceptUri", "altLabels"]
+        ].reset_index(drop=True)
         df_with_alt_label["altLabels"] = df_with_alt_label["altLabels"]
         df_with_alt_label["altLabelsPreprocessed"] = pd.Series(
-            self.preprocess_course_descriptions(df_with_alt_label["altLabels"].tolist()))
+            self.preprocess_course_descriptions(
+                df_with_alt_label["altLabels"].tolist()
+            )
+        )
 
         # preprocess preferredLabel
-        df["preferredLabelPreprocessed"] = pd.Series(self.preprocess_course_descriptions(df["preferredLabel"]))
+        df["preferredLabelPreprocessed"] = pd.Series(
+            self.preprocess_course_descriptions(df["preferredLabel"])
+        )
 
         # merge into one DataFrame and set index to conceptUri
-        df = pd.merge(df, df_with_alt_label, how="left", on=["conceptUri", "altLabels"]).set_index("conceptUri")
+        df = pd.merge(
+            df, df_with_alt_label, how="left", on=["conceptUri", "altLabels"]
+        ).set_index("conceptUri")
 
         # save DataFrame as json
         result = df.to_json(orient="index")
@@ -278,57 +299,8 @@ class PreprocessorGerman:
         # split altLabelsPreprocessed into separate lists instead of separating labels by dots
         for key in result.keys():
             if result[key]["altLabelsPreprocessed"]:
-                result[key]["altLabelsPreprocessed"] = split_list_by_dot(result[key]["altLabelsPreprocessed"])
+                result[key]["altLabelsPreprocessed"] = split_list_by_dot(
+                    result[key]["altLabelsPreprocessed"]
+                )
 
-        return json.dumps(result)
-
-    # def preprocess_label(self, label: str) -> List[str]:
-    #     """
-    #     Preprocess a label, e.g. for inserting a competency into the database.
-    #     :param label: A label string
-    #     :type label: str
-    #     :return: A List of preprocessed strings in the label
-    #     :rtype: List[str]
-    #     """
-    #     tokens = self.tokenize_label(label)
-    #     lemmatized_tokens = self.lemmatize_morphys(tokens)
-    #     lower_lemmatized_tokens = [
-    #         str.lower(lemma_token) for lemma_token in lemmatized_tokens
-    #     ]
-    #
-    #     cleaned_lemmatized_tokens = [
-    #         token
-    #         for token in lower_lemmatized_tokens
-    #         if not token in self.stopwords
-    #     ]
-    #     return cleaned_lemmatized_tokens
-    #
-    # def tokenize_label(self, label: str) -> List[str]:
-    #     """
-    #     Tokenize a label.
-    #     :param label: A label string
-    #     :type label: str
-    #     :return: A List of tokenized strings in the label
-    #     :rtype: List[str]
-    #     """
-    #     return nltk.word_tokenize(label, language=self.language)
-    #
-    # def lemmatize_morphys(self, tokens: List[str]) -> List[str]:
-    #     """
-    #     Tokenize a list of tokens.
-    #     :param tokens: A list of tokens
-    #     :type tokens: List[str]
-    #     :return: A List of lemmatized strings from the tokens
-    #     :rtype: List[str]
-    #     """
-    #     lemmatized_tokens = []
-    #     for token in tokens:
-    #         try:
-    #             lemma = self.morphys.loc[token]["lemma"]
-    #         except KeyError:
-    #             lemma = token
-    #
-    #         lemmatized_tokens.append(lemma)
-    #
-    #     return lemmatized_tokens
-
+        return result
