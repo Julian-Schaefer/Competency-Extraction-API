@@ -17,6 +17,10 @@ Use the following commands for development:
 - `pipenv run python -m spacy download de_core_news_sm` To download german spaCy Data
 - `pipenv run python -m spacy download en_core_web_sm` To download english spaCy Data
 
+### Clean up Database
+1. `match (a) -[r] -> () delete a, r` to clean up relations
+2. `match (a) delete a` to clean up nodes
+
 ## API server
 You can find the documentation of our API at `http://localhost:5000/api/docs` once you have the system up and running.
 

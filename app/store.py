@@ -18,33 +18,31 @@ class Store:
 
         competencies = []
 
-        for _, row in data_file.iterrows():
-            preprocessed_label = self.lemmatizer.preprocess_label(
-                row["preferredLabel"]
-            )
+        skills = self.lemmatizer.get_skills_from_file_as_json(
+            os.environ.get("DATA_FILE")
+        )
+
+        for uri, skill in skills.items():
             labels = [
-                Label(text=" ".join(preprocessed_label), type="preferred")
+                Label(
+                    text=" ".join(skill["preferredLabelPreprocessed"]),
+                    type="preferred",
+                )
             ]
 
-            if not pandas.isna(row["altLabels"]):
-                alt_labels = row["altLabels"].split("\n")
-                preprocessed_labels = [
-                    self.lemmatizer.preprocess_label(alt_label)
-                    for alt_label in alt_labels
-                ]
-
+            if skill.get("altLabelsPreprocessed"):
                 labels += [
                     Label(
                         text=" ".join(preprocessed_label), type="alternative"
                     )
-                    for preprocessed_label in preprocessed_labels
+                    for preprocessed_label in skill["altLabelsPreprocessed"]
                 ]
 
             competency = Competency(
-                row["conceptType"],
-                row["conceptUri"],
-                row["skillType"],
-                row["description"],
+                conceptType=skill["conceptType"],
+                conceptUri=uri,
+                competencyType=skill["skillType"],
+                description=skill["description"],
                 labels=labels,
             )
 
