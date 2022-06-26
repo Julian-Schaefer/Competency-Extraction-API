@@ -72,7 +72,9 @@ class PreprocessorGerman:
         """
         return course_descriptions.map(
             lambda x: pd.Series(
-                nltk.word_tokenize(x, language=self.language), name="form"
+                nltk.word_tokenize(x, language=self.language),
+                name="form",
+                dtype="str",
             )
         )
 
