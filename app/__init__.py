@@ -54,8 +54,8 @@ def create_course():
         competencyExtractor = PaperCompetencyExtractor()
 
         associated_competencies = competencyExtractor.extract_competencies(
-            course_description
-        )
+            [course_description]
+        )[0]
 
         db = GraphDatabaseConnection()
         try:
@@ -79,12 +79,17 @@ def create_course():
         )
     elif request.headers.get("Content-Type").startswith("multipart/form-data"):
         try:
+            course_descriptions = []
             courses_file = request.files["courses"]
 
             courses_xml = ET.parse(
                 courses_file.stream, parser=ET.XMLParser(encoding="utf-8")
             )
             courses = courses_xml.findall(".//COURSE")
+            for course in courses:
+                course_description = course.find("CS_DESC_LONG").text
+                course_descriptions += [course_description]
+
         except:
             return Response(
                 "An error occured while reading the file. Please make sure to upload a correctly formatted XML file named as 'courses'.",
@@ -92,22 +97,18 @@ def create_course():
                 mimetype="application/json",
             )
 
-        if len(courses) > 0:
+        if len(course_descriptions) > 0:
             competencyExtractor = PaperCompetencyExtractor()
             db = GraphDatabaseConnection()
 
-            for course in courses:
-                course_description = course.find("CS_DESC_LONG").text
+            associated_competencies = competencyExtractor.extract_competencies(
+                course_descriptions
+            )
 
-                associated_competencies = (
-                    competencyExtractor.extract_competencies(
-                        course_description
-                    )
-                )
-
+            for i, course_description in enumerate(course_descriptions):
                 try:
                     db.create_course(
-                        course_description, associated_competencies
+                        course_description, associated_competencies[i]
                     )
                 except CourseInsertionFailed as e:
                     return Response(
