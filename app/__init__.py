@@ -176,3 +176,26 @@ def retrieve_competency():
     db.close()
 
     return jsonify([competency.toJSON() for competency in competencies])
+
+
+@app.route("/export", methods=["POST"])
+def export_courses():
+
+    file_path = "data/exported_courses.json"
+
+    f = open(file_path, "w")
+
+    db = GraphDatabaseConnection()
+
+    try:
+        courses = db.retrieve_all_courses()
+    except RetrievingCompetencyFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
+
+    db.close()
+
+    json_string = json.dumps([course.toJSON() for course in courses])
+
+    f.write(json_string)
+
+    return f"Database export was written into '{file_path}'."

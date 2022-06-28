@@ -31,3 +31,6 @@ from app.preprocessing_utils import PreprocessorGerman
 prc_pipeline = PreprocessorGerman()
 preprocessed_course_descriptions = prc_pipeline.preprocess_course_descriptions(course_descriptions)
 ```
+
+## Permission troubleshooting
+If the data folder doesn't show up or cannot be opened try `sudo chmod a+r data -R`.
