@@ -5,6 +5,7 @@ from app.db import (
     RetrievingCourseFailed,
     RetrievingCompetencyFailed,
 )
+from app.models import Course
 from app.store import Store
 from app.competency_extractors.competency_extractor import (
     PaperCompetencyExtractor,
@@ -194,7 +195,23 @@ def export_courses():
 
     db.close()
 
-    json_string = json.dumps([course.toJSON() for course in courses])
+    courses_with_competencies = []
+
+    for course in courses:
+        course_id = course.id
+        try:
+            competencies = db.find_competencies_by_course(course_id)
+        except RetrievingCompetencyFailed as e:
+            return Response(
+                f"error: {e}", status=400, mimetype="application/json"
+            )
+        courses_with_competencies.append(
+            Course(course.id, course.description, competencies)
+        )
+
+    json_string = json.dumps(
+        [course.toJSON() for course in courses_with_competencies]
+    )
 
     f.write(json_string)
 

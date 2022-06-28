@@ -1,5 +1,5 @@
 import json
-from typing import Dict
+from typing import Dict, List
 
 
 class Label:
@@ -41,11 +41,23 @@ class Competency:
 
 
 class Course:
-    def __init__(self, id: int, description: str):
+    def __init__(
+        self, id: int, description: str, competencies: List[Dict] = []
+    ):
         self.id = id
         self.description = description
+        self.competencies = competencies
 
     def toJSON(self) -> Dict:
+        if self.competencies:
+            competencies_json = [
+                competency.toJSON() for competency in self.competencies
+            ]
+            return {
+                "id": self.id,
+                "description": self.description,
+                "competencies": competencies_json,
+            }
         return {
             "id": self.id,
             "description": self.description,
