@@ -242,6 +242,7 @@ class PreprocessorGerman:
         """
         Reads the "skills_de.csv" into a json string and preprocesses the labels of each skill.
         The resulting json string contains a dictionary. The keys are the concept-URIs. Each key has 5 fields:
+        - conceptUri: str
         - conceptType: str
         - KnowledgeSkillCompetence: str
         - preferredLabel: str
@@ -306,3 +307,18 @@ class PreprocessorGerman:
                 )
 
         return result
+
+    @staticmethod
+    def join_tokenized_texts(texts: List[List[str]]) -> List[str]:
+        """
+        Join tokenized texts into strings.
+        :param texts: List of tokenized texts
+        :type texts: List[List[str]]
+        :return: List of non tokenized texts
+        :rtype: List[str]
+        """
+        texts = pd.Series(texts)
+        texts = texts.map(lambda x: " ".join(x).replace(" .", "."))
+        return texts.tolist()
+
+

@@ -61,3 +61,20 @@ class Store:
         sequence_string = " ".join(sequence)
         competencies = self.db.find_competency_by_sequence(sequence_string)
         return competencies
+
+
+class StoreLocal:
+    def __init__(self):
+        self.prc = PreprocessorGerman()
+        self.store_df = pandas.read_csv(
+            r"C:\Users\amirm\OneDrive\Desktop\Python Projects\AWT-Project\app\all_skill_labels.csv", index_col=0)  ## change later
+
+    def check_term(self, term):
+        return self.store_df[self.store_df["label"].str.contains(term)].shape[0] > 0
+
+    def check_sequence(self, sequence):
+        if len(sequence) == 0:
+            return []
+        sequence_string = " ".join(sequence)
+        competencies = self.store_df[self.store_df["label"] == sequence_string]
+        return competencies["label"].tolist()
