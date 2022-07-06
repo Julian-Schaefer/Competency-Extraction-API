@@ -262,8 +262,15 @@ class PreprocessorGerman:
                 "skillType",
                 "conceptUri",
                 "conceptType",
+                "reuseLevel",
                 "preferredLabel",
                 "altLabels",
+                "hiddenLabels",
+                "status",
+                "modifiedDate",
+                "scopeNote",
+                "definition",
+                "inScheme",
                 "description",
             ]
         ]
@@ -320,5 +327,3 @@ class PreprocessorGerman:
         texts = pd.Series(texts)
         texts = texts.map(lambda x: " ".join(x).replace(" .", "."))
         return texts.tolist()
-
-
