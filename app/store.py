@@ -41,7 +41,16 @@ class Store:
             competency = Competency(
                 conceptType=skill["conceptType"],
                 conceptUri=uri,
-                competencyType=skill["skillType"],
+                skillType=skill["skillType"],
+                reuseLevel=skill["reuseLevel"],
+                preferredLabel=skill["preferredLabel"],
+                altLabels=skill["altLabels"],
+                hiddenLabels=skill["hiddenLabels"],
+                status=skill["status"],
+                modifiedDate=skill["modifiedDate"],
+                scopeNote=skill["scopeNote"],
+                definition=skill["definition"],
+                inScheme=skill["inScheme"],
                 description=skill["description"],
                 labels=labels,
             )
@@ -67,10 +76,15 @@ class StoreLocal:
     def __init__(self):
         self.prc = PreprocessorGerman()
         self.store_df = pandas.read_csv(
-            r"C:\Users\amirm\OneDrive\Desktop\Python Projects\AWT-Project\app\all_skill_labels.csv", index_col=0)  ## change later
+            r"C:\Users\amirm\OneDrive\Desktop\Python Projects\AWT-Project\app\all_skill_labels.csv",
+            index_col=0,
+        )  ## change later
 
     def check_term(self, term):
-        return self.store_df[self.store_df["label"].str.contains(term)].shape[0] > 0
+        return (
+            self.store_df[self.store_df["label"].str.contains(term)].shape[0]
+            > 0
+        )
 
     def check_sequence(self, sequence):
         if len(sequence) == 0:

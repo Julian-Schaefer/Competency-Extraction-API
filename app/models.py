@@ -16,26 +16,53 @@ class Label:
 class Competency:
     def __init__(
         self,
-        competencyType: str,
+        skillType: str,
         conceptType: str,
         conceptUri: str,
+        reuseLevel: str,
+        preferredLabel: str,
+        altLabels: str,
+        hiddenLabels: str,
+        status: str,
+        modifiedDate: str,
+        scopeNote: str,
+        definition: str,
+        inScheme: str,
         description: str,
         id: int = -1,
         labels: Label = None,
     ):
         self.id = id
-        self.competencyType = competencyType
+        self.skillType = skillType
         self.conceptType = conceptType
         self.conceptUri = conceptUri
+        self.reuseLevel = reuseLevel
+        self.preferredLabel = preferredLabel
+        self.altLabels = altLabels
+        self.hiddenLabels = hiddenLabels
+        self.status = status
+        self.modifiedDate = modifiedDate
+        self.scopeNote = scopeNote
+        self.definition = definition
+        self.inScheme = inScheme
         self.description = description
         self.labels = labels
 
     def toJSON(self) -> Dict:
         return {
             "id": self.id,
-            "competencyType": self.competencyType,
+            "skillType": self.skillType,
             "conceptType": self.conceptType,
             "conceptUri": self.conceptUri,
+            "reuseLevel": self.reuseLevel,
+            "preferredLabel": self.preferredLabel,
+            "altLabels": self.altLabels,
+            "hiddenLabels": self.hiddenLabels,
+            "status": self.status,
+            "modifiedDate": self.modifiedDate,
+            "scopeNote": self.scopeNote,
+            "definition": self.definition,
+            "inScheme": self.inScheme,
             "description": self.description,
         }
 
