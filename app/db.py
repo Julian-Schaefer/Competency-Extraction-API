@@ -36,12 +36,6 @@ class RetrievingLabelFailed(Exception):
     pass
 
 
-class CompetencyAndCourseInsertionFailed(Exception):
-    """Raised when relationship between competency and course could not be created"""
-
-    pass
-
-
 class GraphDatabaseConnection:
     def __init__(self):
         db_uri = os.environ.get("DB_URI")

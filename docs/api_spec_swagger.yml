@@ -22,6 +22,16 @@ paths:
       summary: Add a new course
       description: Add a new course
       operationId: addCourse
+      parameters:
+      - in: query
+        name: extractor
+        description: Type of Competency Extractor to use
+        required: false
+        schema:
+          type: string
+          enum:
+            - paper
+            - ml
       responses:
         '400':
           description: Invalid input

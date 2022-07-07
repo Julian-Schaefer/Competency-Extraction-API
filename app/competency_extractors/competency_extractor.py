@@ -3,6 +3,8 @@ from typing import List, Dict
 from app.models import Competency
 from app.store import Store, StoreLocal
 import pandas as pd
+import spacy
+import os
 
 
 class CompetencyExtractorInterface:
@@ -10,7 +12,7 @@ class CompetencyExtractorInterface:
 
     def extract_competencies(
         self, course_descriptions: List[str]
-    ) -> List[Optional[Dict]]:
+    ) -> List[List[Competency]]:
         """Extract competencies from course_descriptions."""
         pass
 
@@ -20,7 +22,7 @@ class DummyExtractor(CompetencyExtractorInterface):
 
     def extract_competencies(
         self, course_descriptions: List[str]
-    ) -> List[Optional[Dict]]:
+    ) -> List[List[Competency]]:
         """Extract competencies
 
         Extract competencies from course_description returning every word.
@@ -47,7 +49,7 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
 
     def extract_competencies(
         self, course_descriptions: List[str]
-    ) -> List[Competency]:
+    ) -> List[List[Competency]]:
         tokenized_texts = self.lemmatizer.preprocess_course_descriptions(
             course_descriptions
         )
@@ -109,7 +111,7 @@ class CompetencyExtractorPaperLocal(CompetencyExtractorInterface):
 
     def extract_competencies(
         self, course_descriptions: List[str]
-    ) -> List[Competency]:
+    ) -> List[List[Competency]]:
         tokenized_texts = self.store.prc.preprocess_course_descriptions(
             course_descriptions
         )
@@ -118,7 +120,9 @@ class CompetencyExtractorPaperLocal(CompetencyExtractorInterface):
         for i, text in enumerate(tokenized_texts):
             leng = len(tokenized_texts)
             print(i + 1, " / ", leng)
-            competencies.append(self.get_competencies_from_tokenized_text(text))
+            competencies.append(
+                self.get_competencies_from_tokenized_text(text)
+            )
         return competencies
 
     def get_competencies_from_tokenized_text(self, tokenized_text):
@@ -161,5 +165,31 @@ class CompetencyExtractorPaperLocal(CompetencyExtractorInterface):
 
         return ([], n)
 
-class CompetencyExtractorML(CompetencyExtractorInterface):
-    pass
+
+class MLCompetencyExtractor(CompetencyExtractorInterface):
+    def __init__(self):
+        self.store = Store()
+        self.lemmatizer = self.store.lemmatizer
+        self.nlp = spacy.load(os.environ.get("MODEL_FILES"))
+
+    def extract_competencies(
+        self, course_descriptions: List[str]
+    ) -> List[List[Competency]]:
+        tokenized_texts = self.lemmatizer.preprocess_course_descriptions(
+            course_descriptions
+        )
+
+        all_competencies = []
+
+        for tokenized_text in tokenized_texts:
+            doc = self.nlp(" ".join(tokenized_text))
+            entities = doc.ents
+
+            course_competencies = []
+            for entity in entities:
+                competencies = self.store.check_sequence(entity.text)
+                course_competencies += competencies
+
+            all_competencies += [course_competencies]
+
+        return all_competencies
