@@ -178,11 +178,11 @@ class MLCompetencyExtractor(CompetencyExtractorInterface):
         tokenized_texts = self.lemmatizer.preprocess_course_descriptions(
             course_descriptions
         )
-
+        texts = self.lemmatizer.join_tokenized_texts(tokenized_texts)
         all_competencies = []
 
-        for tokenized_text in tokenized_texts:
-            doc = self.nlp(" ".join(tokenized_text))
+        for text in texts:
+            doc = self.nlp(text)
             entities = doc.ents
 
             course_competencies = []

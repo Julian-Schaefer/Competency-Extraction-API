@@ -73,5 +73,3 @@ def main():
     # create spacy files for training and testing
     create_spacy_file_from_df(training_data_df, "train")
     create_spacy_file_from_df(testing_data_df, "test")
-
-
