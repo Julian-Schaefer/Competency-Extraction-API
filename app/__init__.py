@@ -7,6 +7,7 @@ from app.db import (
 )
 from app.store import Store
 from app.competency_extractors.competency_extractor import (
+    MLCompetencyExtractor,
     PaperCompetencyExtractor,
 )
 import xml.etree.ElementTree as ET
@@ -39,8 +40,19 @@ def initialize():
     return "Database and Store have been initialized successfully!"
 
 
+def _get_competency_extractor_from_string(name):
+    if not name or name == "paper":
+        return PaperCompetencyExtractor()
+    elif name == "ml":
+        return MLCompetencyExtractor()
+
+    return None
+
+
 @app.route("/course", methods=["POST"])
 def create_course():
+    extractor = request.args.get("extractor")
+
     if request.headers.get("Content-Type") == "application/json":
         course_description = json.loads(request.data).get("courseDescription")
 
@@ -51,7 +63,9 @@ def create_course():
                 mimetype="application/json",
             )
 
-        competencyExtractor = PaperCompetencyExtractor()
+        competencyExtractor = _get_competency_extractor_from_string(
+            name=extractor
+        )
 
         associated_competencies = competencyExtractor.extract_competencies(
             [course_description]
@@ -98,7 +112,9 @@ def create_course():
             )
 
         if len(course_descriptions) > 0:
-            competencyExtractor = PaperCompetencyExtractor()
+            competencyExtractor = _get_competency_extractor_from_string(
+                name=extractor
+            )
             db = GraphDatabaseConnection()
 
             associated_competencies = competencyExtractor.extract_competencies(

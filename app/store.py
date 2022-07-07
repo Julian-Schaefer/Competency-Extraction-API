@@ -67,7 +67,11 @@ class Store:
         if len(sequence) == 0:
             return []
 
-        sequence_string = " ".join(sequence)
+        if isinstance(sequence, str):
+            sequence_string = sequence
+        else:
+            sequence_string = " ".join(sequence)
+
         competencies = self.db.find_competency_by_sequence(sequence_string)
         return competencies
 
