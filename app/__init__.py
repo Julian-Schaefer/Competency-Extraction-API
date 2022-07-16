@@ -1,5 +1,10 @@
-from app.routes import app
+import imp
+from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
+from app.routes import routes
+
+app = Flask(__name__, static_folder="../docs", static_url_path="/docs")
+app.register_blueprint(routes)
 
 SWAGGER_URL = "/api/docs"  # URL for exposing Swagger UI (without trailing '/')
 API_DEFINITION_FILE = "../../docs/api_spec_swagger.yml"  # Our API Definition

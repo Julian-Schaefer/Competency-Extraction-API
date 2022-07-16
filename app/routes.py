@@ -1,4 +1,4 @@
-from flask import Flask, Response, request, json, jsonify
+from flask import Blueprint, Response, request, json, jsonify
 from app.db import (
     GraphDatabaseConnection,
     CourseInsertionFailed,
@@ -12,15 +12,15 @@ from app.competency_extractors.competency_extractor import (
 )
 import xml.etree.ElementTree as ET
 
-app = Flask(__name__, static_folder="../docs", static_url_path="/docs")
+routes = Blueprint("routes", __name__)
 
 
-@app.route("/")
+@routes.route("/")
 def hello():
     return "<h1>Welcome!</h1><p>Welcome to our API server, you can query courses and competencies here.</p>"
 
 
-@app.route("/initialize", methods=["POST"])
+@routes.route("/initialize", methods=["POST"])
 def initialize():
     store = Store()
     store.initialize()
@@ -36,7 +36,7 @@ def _get_competency_extractor_from_string(name):
     return None
 
 
-@app.route("/course", methods=["POST"])
+@routes.route("/course", methods=["POST"])
 def create_course():
     extractor = request.args.get("extractor")
 
@@ -128,7 +128,7 @@ def create_course():
         )
 
 
-@app.route("/courses", methods=["GET"])
+@routes.route("/courses", methods=["GET"])
 def retrieve_course():
     competency_id = request.args.get("competencyId")
 
@@ -155,7 +155,7 @@ def retrieve_course():
     return jsonify([course.toJSON() for course in courses])
 
 
-@app.route("/competency", methods=["GET"])
+@routes.route("/competency", methods=["GET"])
 def retrieve_competency():
     course_id = request.args.get("courseId")
 
