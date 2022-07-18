@@ -15,8 +15,6 @@ Use the following commands for development:
 - `pipenv run python -m flask run` to start the server (for Dev/Debug purposes)
 - `curl -X POST http://localhost:5000/initialize` to initiliaze the Database and Store (takes around 10 Minutes)
 - `docker-compose start db` Only start Neo4J Database
-- `pipenv run python -m spacy download de_core_news_sm` To download german spaCy Data
-- `pipenv run python -m spacy download en_core_web_sm` To download english spaCy Data
 
 ### Clean up Database
 1. `match (a) -[r] -> () delete a, r` to clean up relations
