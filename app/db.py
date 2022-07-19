@@ -465,6 +465,38 @@ class GraphDatabaseConnection:
             return courses
 
     @staticmethod
+    def _find_courses_by_text_query(
+        tx, text_search_query: str
+    ) -> List[Course]:
+        query = "MATCH (cou:Course) where cou.description CONTAINS $text_search_query RETURN cou AS course"
+
+        try:
+            result = tx.run(query, text_search_query=text_search_query)
+
+            if not result:
+                return None
+
+            courses = [
+                Course(
+                    id=record["course"].id,
+                    description=record["course"]._properties["description"],
+                )
+                for record in result
+            ]
+            return courses
+        except Exception as e:
+            raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
+
+    def find_courses_by_text_query(
+        self, text_search_query: str
+    ) -> List[Course]:
+        with self.driver.session() as session:
+            courses = session.write_transaction(
+                self._find_courses_by_text_query, text_search_query
+            )
+            return courses
+
+    @staticmethod
     def _find_competencies_by_course(tx, course_id: int) -> Dict:
         query = "MATCH (com:Competency)<-[:MATCHES]-(cou:Course) where id(cou)=$id RETURN com AS competency"
 

@@ -131,24 +131,20 @@ def create_course():
 @routes.route("/courses", methods=["GET"])
 def retrieve_course():
     competency_id = request.args.get("competencyId")
+    text_search_query = request.args.get("search")
 
     db = GraphDatabaseConnection()
 
     # in case the request body contains a competency_id, filter courses
-    if not competency_id:
-        try:
-            courses = db.retrieve_all_courses()
-        except RetrievingCourseFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
-            )
-    else:
-        try:
+    try:
+        if competency_id:
             courses = db.find_courses_by_competency(int(competency_id))
-        except RetrievingCourseFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
-            )
+        elif text_search_query and len(text_search_query) > 0:
+            courses = db.find_courses_by_text_query(text_search_query)
+        else:
+            courses = db.retrieve_all_courses()
+    except RetrievingCourseFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
 
     db.close()
 
