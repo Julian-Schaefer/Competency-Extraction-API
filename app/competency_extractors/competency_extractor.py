@@ -104,7 +104,17 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
 
 
 class CompetencyExtractorPaperLocal(CompetencyExtractorInterface):
+    """
+    This class contains the same functionality as the PaperCompetencyExtractor class. The only difference is that this
+    class can be used to extract competencies from course descriptions locally, without having to start the server.
+    Extracting competencies through this class however does not upload the courses and extracted competencies to the
+    Database. The only purpose of this class is to extract competencies en masse in order to evaluate the results and
+    compare them to the results of other extractors.
+    """
     def __init__(self):
+        """
+        Constructor  method
+        """
         self.store = StoreLocal()
 
     def extract_competencies(
