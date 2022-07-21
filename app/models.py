@@ -1,5 +1,6 @@
 import json
 from typing import Dict
+from neo4j import Record
 
 
 class Label:
@@ -48,6 +49,29 @@ class Competency:
         self.description = description
         self.labels = labels
 
+    @staticmethod
+    def fromDatabaseRecord(record: Record):
+        competency = Competency(
+            id=record["competency"].id,
+            skillType=record["competency"]._properties.get("skillType"),
+            conceptType=record["competency"]._properties.get("conceptType"),
+            conceptUri=record["competency"]._properties.get("conceptUri"),
+            reuseLevel=record["competency"]._properties.get("reuseLevel"),
+            preferredLabel=record["competency"]._properties.get(
+                "preferredLabel"
+            ),
+            altLabels=record["competency"]._properties.get("altLabels"),
+            hiddenLabels=record["competency"]._properties.get("hiddenLabels"),
+            status=record["competency"]._properties.get("status"),
+            modifiedDate=record["competency"]._properties.get("modifiedDate"),
+            scopeNote=record["competency"]._properties.get("scopeNote"),
+            definition=record["competency"]._properties.get("definition"),
+            inScheme=record["competency"]._properties.get("inScheme"),
+            description=record["competency"]._properties.get("description"),
+        )
+
+        return competency
+
     def toJSON(self) -> Dict:
         return {
             "id": self.id,
@@ -71,6 +95,15 @@ class Course:
     def __init__(self, id: int, description: str):
         self.id = id
         self.description = description
+
+    @staticmethod
+    def fromDatabaseRecord(record: Record):
+        course = Course(
+            id=record["course"].id,
+            description=record["course"]._properties["description"],
+        )
+
+        return course
 
     def toJSON(self) -> Dict:
         return {
