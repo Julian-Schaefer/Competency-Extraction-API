@@ -1,9 +1,10 @@
-from typing import List, Optional, Dict
+from typing import List, Dict
 from xmlrpc.client import Boolean
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 import os
 from app.models import Competency, Course
+from app.preprocessing_utils import PreprocessorGerman
 
 
 class CompetencyInsertionFailed(Exception):
@@ -234,14 +235,7 @@ class GraphDatabaseConnection:
         except ClientError as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
 
-        courses = [
-            Course(
-                id=c["result"].id,
-                description=c["result"]._properties["description"],
-            )
-            for c in result
-        ]
-
+        courses = [Course.fromDatabaseRecord(record) for record in result]
         return courses
 
     def retrieve_all_competencies(self) -> List[Competency]:
@@ -278,33 +272,7 @@ class GraphDatabaseConnection:
             return None
 
         competencies = [
-            Competency(
-                id=record["competency"].id,
-                skillType=record["competency"]._properties.get("skillType"),
-                conceptType=record["competency"]._properties.get(
-                    "conceptType"
-                ),
-                conceptUri=record["competency"]._properties.get("conceptUri"),
-                reuseLevel=record["competency"]._properties.get("reuseLevel"),
-                preferredLabel=record["competency"]._properties.get(
-                    "preferredLabel"
-                ),
-                altLabels=record["competency"]._properties.get("altLabels"),
-                hiddenLabels=record["competency"]._properties.get(
-                    "hiddenLabels"
-                ),
-                status=record["competency"]._properties.get("status"),
-                modifiedDate=record["competency"]._properties.get(
-                    "modifiedDate"
-                ),
-                scopeNote=record["competency"]._properties.get("scopeNote"),
-                definition=record["competency"]._properties.get("definition"),
-                inScheme=record["competency"]._properties.get("inScheme"),
-                description=record["competency"]._properties.get(
-                    "description"
-                ),
-            )
-            for record in result
+            Competency.fromDatabaseRecord(record) for record in result
         ]
         return competencies
 
@@ -377,45 +345,7 @@ class GraphDatabaseConnection:
                 return None
 
             competencies = [
-                Competency(
-                    id=record["competency"].id,
-                    skillType=record["competency"]._properties.get(
-                        "skillType"
-                    ),
-                    conceptType=record["competency"]._properties.get(
-                        "conceptType"
-                    ),
-                    conceptUri=record["competency"]._properties.get(
-                        "conceptUri"
-                    ),
-                    reuseLevel=record["competency"]._properties.get(
-                        "reuseLevel"
-                    ),
-                    preferredLabel=record["competency"]._properties.get(
-                        "preferredLabel"
-                    ),
-                    altLabels=record["competency"]._properties.get(
-                        "altLabels"
-                    ),
-                    hiddenLabels=record["competency"]._properties.get(
-                        "hiddenLabels"
-                    ),
-                    status=record["competency"]._properties.get("status"),
-                    modifiedDate=record["competency"]._properties.get(
-                        "modifiedDate"
-                    ),
-                    scopeNote=record["competency"]._properties.get(
-                        "scopeNote"
-                    ),
-                    definition=record["competency"]._properties.get(
-                        "definition"
-                    ),
-                    inScheme=record["competency"]._properties.get("inScheme"),
-                    description=record["competency"]._properties.get(
-                        "description"
-                    ),
-                )
-                for record in result
+                Competency.fromDatabaseRecord(record) for record in result
             ]
             return competencies
         except Exception as e:
@@ -433,13 +363,7 @@ class GraphDatabaseConnection:
             if not result:
                 return None
 
-            courses = [
-                Course(
-                    id=record["course"].id,
-                    description=record["course"]._properties["description"],
-                )
-                for record in result
-            ]
+            courses = [Course.fromDatabaseRecord(record) for record in result]
             return courses
         except Exception as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
@@ -465,6 +389,76 @@ class GraphDatabaseConnection:
             return courses
 
     @staticmethod
+    def _find_courses_by_text_query(
+        tx, text_search_query: str
+    ) -> List[Course]:
+        query = "MATCH (cou:Course) where cou.description CONTAINS $text_search_query RETURN cou AS course"
+
+        try:
+            result = tx.run(query, text_search_query=text_search_query)
+
+            if not result:
+                return None
+
+            courses = [Course.fromDatabaseRecord(record) for record in result]
+            return courses
+        except Exception as e:
+            raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
+
+    def find_courses_by_text_query(
+        self, text_search_query: str
+    ) -> List[Course]:
+        with self.driver.session() as session:
+            courses = session.write_transaction(
+                self._find_courses_by_text_query, text_search_query
+            )
+            return courses
+
+    @staticmethod
+    def _find_competencies_by_text_query(
+        tx, text_search_query: str
+    ) -> List[Competency]:
+        prepocessor = PreprocessorGerman()
+        processed_search_query = prepocessor.preprocess_texts(
+            [text_search_query]
+        )
+        processed_search_query = " ".join(processed_search_query[0])
+
+        query = (
+            "MATCH (com:Competency) WHERE com.description CONTAINS $text_search_query RETURN com AS competency"
+            " UNION "
+            "MATCH (lab:Label)<-[:IDENTIFIED_BY]-(com:Competency) WHERE lab.text CONTAINS $processed_search_query RETURN com AS competency"
+        )
+
+        try:
+            result = tx.run(
+                query,
+                text_search_query=text_search_query,
+                processed_search_query=processed_search_query,
+            )
+
+            if not result:
+                return None
+
+            competencies = [
+                Competency.fromDatabaseRecord(record) for record in result
+            ]
+            return competencies
+        except Exception as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
+
+    def find_competencies_by_text_query(
+        self, text_search_query: str
+    ) -> List[Competency]:
+        with self.driver.session() as session:
+            competencies = session.write_transaction(
+                self._find_competencies_by_text_query, text_search_query
+            )
+            return competencies
+
+    @staticmethod
     def _find_competencies_by_course(tx, course_id: int) -> Dict:
         query = "MATCH (com:Competency)<-[:MATCHES]-(cou:Course) where id(cou)=$id RETURN com AS competency"
 
@@ -475,45 +469,7 @@ class GraphDatabaseConnection:
                 return None
 
             competencies = [
-                Competency(
-                    id=record["competency"].id,
-                    skillType=record["competency"]._properties.get(
-                        "skillType"
-                    ),
-                    conceptType=record["competency"]._properties.get(
-                        "conceptType"
-                    ),
-                    conceptUri=record["competency"]._properties.get(
-                        "conceptUri"
-                    ),
-                    reuseLevel=record["competency"]._properties.get(
-                        "reuseLevel"
-                    ),
-                    preferredLabel=record["competency"]._properties.get(
-                        "preferredLabel"
-                    ),
-                    altLabels=record["competency"]._properties.get(
-                        "altLabels"
-                    ),
-                    hiddenLabels=record["competency"]._properties.get(
-                        "hiddenLabels"
-                    ),
-                    status=record["competency"]._properties.get("status"),
-                    modifiedDate=record["competency"]._properties.get(
-                        "modifiedDate"
-                    ),
-                    scopeNote=record["competency"]._properties.get(
-                        "scopeNote"
-                    ),
-                    definition=record["competency"]._properties.get(
-                        "definition"
-                    ),
-                    inScheme=record["competency"]._properties.get("inScheme"),
-                    description=record["competency"]._properties.get(
-                        "description"
-                    ),
-                )
-                for record in result
+                Competency.fromDatabaseRecord(record) for record in result
             ]
 
             return competencies

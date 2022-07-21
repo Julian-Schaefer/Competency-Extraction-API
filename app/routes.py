@@ -20,11 +20,11 @@ def hello():
     return "<h1>Welcome!</h1><p>Welcome to our API server, you can query courses and competencies here.</p>"
 
 
-@routes.route("/initialize", methods=["POST"])
+@routes.route("/competencies/initialize", methods=["POST"])
 def initialize():
     store = Store()
     store.initialize()
-    return "Database and Store have been initialized successfully!"
+    return "Database and Store have been initialized with Competencies successfully!"
 
 
 def _get_competency_extractor_from_string(name):
@@ -36,7 +36,7 @@ def _get_competency_extractor_from_string(name):
     return None
 
 
-@routes.route("/course", methods=["POST"])
+@routes.route("/courses", methods=["POST"])
 def create_course():
     extractor = request.args.get("extractor")
 
@@ -131,50 +131,44 @@ def create_course():
 @routes.route("/courses", methods=["GET"])
 def retrieve_course():
     competency_id = request.args.get("competencyId")
+    text_search_query = request.args.get("search")
 
     db = GraphDatabaseConnection()
 
     # in case the request body contains a competency_id, filter courses
-    if not competency_id:
-        try:
-            courses = db.retrieve_all_courses()
-        except RetrievingCourseFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
-            )
-    else:
-        try:
+    try:
+        if competency_id:
             courses = db.find_courses_by_competency(int(competency_id))
-        except RetrievingCourseFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
-            )
+        elif text_search_query and len(text_search_query) > 0:
+            courses = db.find_courses_by_text_query(text_search_query)
+        else:
+            courses = db.retrieve_all_courses()
+    except RetrievingCourseFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
 
     db.close()
 
     return jsonify([course.toJSON() for course in courses])
 
 
-@routes.route("/competency", methods=["GET"])
+@routes.route("/competencies", methods=["GET"])
 def retrieve_competency():
     course_id = request.args.get("courseId")
+    text_search_query = request.args.get("search")
 
     db = GraphDatabaseConnection()
 
-    if not course_id:
-        try:
-            competencies = db.retrieve_all_competencies()
-        except RetrievingCompetencyFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
-            )
-    else:
-        try:
+    try:
+        if course_id:
             competencies = db.find_competencies_by_course(int(course_id))
-        except RetrievingCompetencyFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
+        elif text_search_query and len(text_search_query) > 0:
+            competencies = db.find_competencies_by_text_query(
+                text_search_query
             )
+        else:
+            competencies = db.retrieve_all_competencies()
+    except RetrievingCompetencyFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
 
     db.close()
 
