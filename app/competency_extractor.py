@@ -1,5 +1,4 @@
-from typing import List, Optional, Dict
-from typing import List, Dict
+from typing import List
 from app.models import Competency
 from app.store import Store, StoreLocal
 import pandas as pd
@@ -34,10 +33,10 @@ class DummyExtractor(CompetencyExtractorInterface):
             List of competencies as dict
         """
         return [
-            {
-                "name": course_description,
-                "body": f"some description of {course_description.split()}",
-            }
+            Competency(
+                preferredLabel=course_description,
+                description=f"some description of {course_description.split()}",
+            )
             for course_description in course_descriptions
         ]
 
@@ -111,10 +110,8 @@ class CompetencyExtractorPaperLocal(CompetencyExtractorInterface):
     Database. The only purpose of this class is to extract competencies en masse in order to evaluate the results and
     compare them to the results of other extractors.
     """
+
     def __init__(self):
-        """
-        Constructor  method
-        """
         self.store = StoreLocal()
 
     def extract_competencies(

@@ -19,6 +19,12 @@ class CourseInsertionFailed(Exception):
     pass
 
 
+class CourseAlreadyExists(Exception):
+    """Raised when course already exists in the DB"""
+
+    pass
+
+
 class RetrievingCourseFailed(Exception):
     """Raised when course(s) couldn't be retrieved"""
 
@@ -150,7 +156,10 @@ class GraphDatabaseConnection:
                     )
 
     def create_course(
-        self, course_description: str, associated_competencies
+        self,
+        course_description: str,
+        extractor: str,
+        associated_competencies: List[Competency],
     ) -> Course:
         """
         Create course
@@ -174,18 +183,46 @@ class GraphDatabaseConnection:
             course = session.write_transaction(
                 self._create_course_transaction,
                 course_description,
+                extractor,
                 associated_competencies_ids,
             )
             return course
 
     @staticmethod
     def _create_course_transaction(
-        tx, course_description: str, associated_competencies_ids
+        tx,
+        course_description: str,
+        extractor: str,
+        associated_competencies_ids: List[Competency],
     ) -> Course:
-        create_course_query = "CREATE (c:Course) SET c.description = $description RETURN id(c) AS id"
+        select_course_query = "MATCH (cou:Course) where cou.description = $description AND cou.extractor = $extractor RETURN cou AS course"
+        course_exists = False
+
         try:
             result = tx.run(
-                create_course_query, description=course_description
+                select_course_query,
+                description=course_description,
+                extractor=extractor,
+            )
+
+            if result and result.single():
+                course_exists = True
+        except Exception as e:
+            raise CourseInsertionFailed(
+                f"{select_course_query} raised an error: \n {e}"
+            )
+
+        if course_exists:
+            raise CourseAlreadyExists(
+                f"Course with extractor '{extractor}' and description '{course_description}' already exists."
+            )
+
+        create_course_query = "CREATE (c:Course) SET c.description = $description, c.extractor = $extractor RETURN id(c) AS id"
+        try:
+            result = tx.run(
+                create_course_query,
+                description=course_description,
+                extractor=extractor,
             )
             course_id = result.single()["id"]
         except ClientError as e:
@@ -207,7 +244,9 @@ class GraphDatabaseConnection:
                     f"{create_relation_query} raised an error: \n {e}"
                 )
 
-        return Course(id=course_id, description=course_description)
+        return Course(
+            id=course_id, description=course_description, extractor=extractor
+        )
 
     def retrieve_all_courses(self) -> List[Course]:
         """

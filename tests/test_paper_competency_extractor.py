@@ -1,4 +1,4 @@
-from app.competency_extractors.competency_extractor import (
+from app.competency_extractor import (
     PaperCompetencyExtractor,
 )
 

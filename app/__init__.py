@@ -1,4 +1,3 @@
-import imp
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
 from app.routes import routes
