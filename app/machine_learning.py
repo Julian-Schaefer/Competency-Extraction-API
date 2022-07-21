@@ -69,7 +69,8 @@ def main():
     # split DataFrame into training and testing
     training_data_df = courses_df.sample(frac=0.8, random_state=25)
     testing_data_df = courses_df.drop(training_data_df.index)
-
+    print(training_data_df)
     # create spacy files for training and testing
     create_spacy_file_from_df(training_data_df, "train")
     create_spacy_file_from_df(testing_data_df, "test")
+
