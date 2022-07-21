@@ -1,12 +1,13 @@
 from flask import Blueprint, Response, request, json, jsonify
 from app.db import (
+    CourseAlreadyExists,
     GraphDatabaseConnection,
     CourseInsertionFailed,
     RetrievingCourseFailed,
     RetrievingCompetencyFailed,
 )
 from app.store import Store
-from app.competency_extractors.competency_extractor import (
+from app.competency_extractor import (
     MLCompetencyExtractor,
     PaperCompetencyExtractor,
 )
@@ -44,11 +45,7 @@ def create_course():
         course_description = json.loads(request.data).get("courseDescription")
 
         if not course_description:
-            return Response(
-                "Body 'course_description' is missing",
-                status=400,
-                mimetype="application/json",
-            )
+            return {"error": "Body 'course_description' is missing"}, 400
 
         competencyExtractor = _get_competency_extractor_from_string(
             name=extractor
@@ -59,14 +56,16 @@ def create_course():
         )[0]
 
         db = GraphDatabaseConnection()
+
         try:
             course = db.create_course(
-                course_description, associated_competencies
+                course_description, extractor, associated_competencies
             )
+        except CourseAlreadyExists as e:
+            return {"error": str(e)}, 409
         except CourseInsertionFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
-            )
+            return {"error": str(e)}, 400
+
         db.close()
 
         return jsonify(
@@ -92,11 +91,9 @@ def create_course():
                 course_descriptions += [course_description]
 
         except:
-            return Response(
-                "An error occured while reading the file. Please make sure to upload a correctly formatted XML file named as 'courses'.",
-                status=400,
-                mimetype="application/json",
-            )
+            return {
+                "error": "An error occured while reading the file. Please make sure to upload a correctly formatted XML file named as 'courses'."
+            }, 400
 
         if len(course_descriptions) > 0:
             competencyExtractor = _get_competency_extractor_from_string(
@@ -111,21 +108,21 @@ def create_course():
             for i, course_description in enumerate(course_descriptions):
                 try:
                     db.create_course(
-                        course_description, associated_competencies[i]
+                        course_description,
+                        extractor,
+                        associated_competencies[i],
                     )
+                except CourseAlreadyExists as e:
+                    return {"error": str(e)}, 409
                 except CourseInsertionFailed as e:
-                    return Response(
-                        f"error: {e}", status=400, mimetype="application/json"
-                    )
+                    return {"error": str(e)}, 400
 
             db.close()
             return "Imported Courses from XML File successfully!"
     else:
-        return Response(
-            "Content-Type not supported! Expected type application/json or multipart/form-data",
-            status=400,
-            mimetype="application/json",
-        )
+        return {
+            "error": "Content-Type not supported! Expected type application/json or multipart/form-data"
+        }, 400
 
 
 @routes.route("/courses", methods=["GET"])
@@ -144,7 +141,7 @@ def retrieve_course():
         else:
             courses = db.retrieve_all_courses()
     except RetrievingCourseFailed as e:
-        return Response(f"error: {e}", status=400, mimetype="application/json")
+        return {"error": str(e)}, 400
 
     db.close()
 
@@ -168,7 +165,7 @@ def retrieve_competency():
         else:
             competencies = db.retrieve_all_competencies()
     except RetrievingCompetencyFailed as e:
-        return Response(f"error: {e}", status=400, mimetype="application/json")
+        return {"error": str(e)}, 400
 
     db.close()
 

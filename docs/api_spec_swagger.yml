@@ -33,8 +33,10 @@ paths:
             - paper
             - ml
       responses:
+        '409':
+          description: Course already exists.
         '400':
-          description: Invalid input
+          description: Invalid input.
         '200':
           description: Course was added successfully.
           content:
@@ -69,7 +71,7 @@ paths:
           type: string
       responses:
         '400':
-          description: Invalid input
+          description: Invalid input.
         '200':
           description: Query result for courses.
           content:
@@ -110,7 +112,7 @@ paths:
           type: string
       responses:
         '400':
-          description: Invalid input
+          description: Invalid input.
         '200':
           description: Query result for competencies.
           content:

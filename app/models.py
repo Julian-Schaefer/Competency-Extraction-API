@@ -92,15 +92,17 @@ class Competency:
 
 
 class Course:
-    def __init__(self, id: int, description: str):
+    def __init__(self, id: int, description: str, extractor: str):
         self.id = id
         self.description = description
+        self.extractor = extractor
 
     @staticmethod
     def fromDatabaseRecord(record: Record):
         course = Course(
             id=record["course"].id,
             description=record["course"]._properties["description"],
+            extractor=record["course"]._properties["extractor"],
         )
 
         return course
@@ -109,4 +111,5 @@ class Course:
         return {
             "id": self.id,
             "description": self.description,
+            "extractor": self.extractor,
         }
