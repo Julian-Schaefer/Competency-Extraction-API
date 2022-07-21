@@ -154,23 +154,21 @@ def retrieve_course():
 @routes.route("/competencies", methods=["GET"])
 def retrieve_competency():
     course_id = request.args.get("courseId")
+    text_search_query = request.args.get("search")
 
     db = GraphDatabaseConnection()
 
-    if not course_id:
-        try:
-            competencies = db.retrieve_all_competencies()
-        except RetrievingCompetencyFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
-            )
-    else:
-        try:
+    try:
+        if course_id:
             competencies = db.find_competencies_by_course(int(course_id))
-        except RetrievingCompetencyFailed as e:
-            return Response(
-                f"error: {e}", status=400, mimetype="application/json"
+        elif text_search_query and len(text_search_query) > 0:
+            competencies = db.find_competencies_by_text_query(
+                text_search_query
             )
+        else:
+            competencies = db.retrieve_all_competencies()
+    except RetrievingCompetencyFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
 
     db.close()
 

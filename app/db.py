@@ -1,9 +1,10 @@
-from typing import List, Optional, Dict
+from typing import List, Dict
 from xmlrpc.client import Boolean
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 import os
 from app.models import Competency, Course
+from app.preprocessing_utils import PreprocessorGerman
 
 
 class CompetencyInsertionFailed(Exception):
@@ -495,6 +496,88 @@ class GraphDatabaseConnection:
                 self._find_courses_by_text_query, text_search_query
             )
             return courses
+
+    @staticmethod
+    def _find_competencies_by_text_query(
+        tx, text_search_query: str
+    ) -> List[Competency]:
+        prepocessor = PreprocessorGerman()
+        processed_search_query = prepocessor.preprocess_texts(
+            [text_search_query]
+        )
+        processed_search_query = " ".join(processed_search_query[0])
+
+        query = (
+            "MATCH (com:Competency) WHERE com.description CONTAINS $text_search_query RETURN com AS competency"
+            " UNION "
+            "MATCH (lab:Label)<-[:IDENTIFIED_BY]-(com:Competency) WHERE lab.text CONTAINS $processed_search_query RETURN com AS competency"
+        )
+
+        try:
+            result = tx.run(
+                query,
+                text_search_query=text_search_query,
+                processed_search_query=processed_search_query,
+            )
+
+            if not result:
+                return None
+
+            competencies = [
+                Competency(
+                    id=record["competency"].id,
+                    skillType=record["competency"]._properties.get(
+                        "skillType"
+                    ),
+                    conceptType=record["competency"]._properties.get(
+                        "conceptType"
+                    ),
+                    conceptUri=record["competency"]._properties.get(
+                        "conceptUri"
+                    ),
+                    reuseLevel=record["competency"]._properties.get(
+                        "reuseLevel"
+                    ),
+                    preferredLabel=record["competency"]._properties.get(
+                        "preferredLabel"
+                    ),
+                    altLabels=record["competency"]._properties.get(
+                        "altLabels"
+                    ),
+                    hiddenLabels=record["competency"]._properties.get(
+                        "hiddenLabels"
+                    ),
+                    status=record["competency"]._properties.get("status"),
+                    modifiedDate=record["competency"]._properties.get(
+                        "modifiedDate"
+                    ),
+                    scopeNote=record["competency"]._properties.get(
+                        "scopeNote"
+                    ),
+                    definition=record["competency"]._properties.get(
+                        "definition"
+                    ),
+                    inScheme=record["competency"]._properties.get("inScheme"),
+                    description=record["competency"]._properties.get(
+                        "description"
+                    ),
+                )
+                for record in result
+            ]
+            return competencies
+        except Exception as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
+
+    def find_competencies_by_text_query(
+        self, text_search_query: str
+    ) -> List[Competency]:
+        with self.driver.session() as session:
+            competencies = session.write_transaction(
+                self._find_competencies_by_text_query, text_search_query
+            )
+            return competencies
 
     @staticmethod
     def _find_competencies_by_course(tx, course_id: int) -> Dict:

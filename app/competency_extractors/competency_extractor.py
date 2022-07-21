@@ -50,9 +50,7 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
     def extract_competencies(
         self, course_descriptions: List[str]
     ) -> List[List[Competency]]:
-        tokenized_texts = self.lemmatizer.preprocess_course_descriptions(
-            course_descriptions
-        )
+        tokenized_texts = self.lemmatizer.preprocess_texts(course_descriptions)
 
         tokenized_texts_series = pd.Series(tokenized_texts, name="form")
         competencies = tokenized_texts_series.map(
@@ -112,9 +110,7 @@ class CompetencyExtractorPaperLocal(CompetencyExtractorInterface):
     def extract_competencies(
         self, course_descriptions: List[str]
     ) -> List[List[Competency]]:
-        tokenized_texts = self.store.prc.preprocess_course_descriptions(
-            course_descriptions
-        )
+        tokenized_texts = self.store.prc.preprocess_texts(course_descriptions)
 
         competencies = []
         for i, text in enumerate(tokenized_texts):
@@ -175,9 +171,7 @@ class MLCompetencyExtractor(CompetencyExtractorInterface):
     def extract_competencies(
         self, course_descriptions: List[str]
     ) -> List[List[Competency]]:
-        tokenized_texts = self.lemmatizer.preprocess_course_descriptions(
-            course_descriptions
-        )
+        tokenized_texts = self.lemmatizer.preprocess_texts(course_descriptions)
         texts = self.lemmatizer.join_tokenized_texts(tokenized_texts)
         all_competencies = []
 
