@@ -29,7 +29,7 @@ def initialize():
 
 
 def _get_competency_extractor_from_string(name):
-    if not name or name == "paper":
+    if name == "paper":
         return PaperCompetencyExtractor()
     elif name == "ml":
         return MLCompetencyExtractor()
@@ -40,6 +40,8 @@ def _get_competency_extractor_from_string(name):
 @routes.route("/courses", methods=["POST"])
 def create_course():
     extractor = request.args.get("extractor")
+    if not extractor:
+        extractor = "paper"
 
     if request.headers.get("Content-Type") == "application/json":
         course_description = json.loads(request.data).get("courseDescription")

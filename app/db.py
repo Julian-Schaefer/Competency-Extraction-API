@@ -214,7 +214,7 @@ class GraphDatabaseConnection:
 
         if course_exists:
             raise CourseAlreadyExists(
-                f"Course with extractor {extractor} and description {course_description} already exists."
+                f"Course with extractor '{extractor}' and description '{course_description}' already exists."
             )
 
         create_course_query = "CREATE (c:Course) SET c.description = $description, c.extractor = $extractor RETURN id(c) AS id"
