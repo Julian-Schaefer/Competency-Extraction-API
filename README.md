@@ -62,26 +62,13 @@ If the data folder doesn't show up or cannot be opened try `sudo chmod a+r data 
 To use the trained Entity Recognition Model use the following code:
 
 ```
-import spacy
-
-## Machine Learning
-To use the trained Entity Recognition Model use the following code:
-```
 
 import spacy
-
-# load model
 
 nlp = spacy.load(path_to_model)
 
-# pass a preprocessed course description to the model
-
 doc = nlp()
 
-# retrieve the entities
-
 ents = doc.ents
-
-```
 
 ```
