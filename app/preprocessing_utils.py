@@ -4,9 +4,10 @@ import nltk
 import os
 from typing import List
 import numpy as np
+from itertools import groupby, zip_longest
 import json
 
-__data_path__ = os.path.join(os.path.dirname(__file__), "./lemma_cache_data")
+__data_path__ = os.path.join(os.path.dirname(__file__), "/lemma_cache_data")
 
 
 def add_nltk_data_path():
@@ -15,6 +16,20 @@ def add_nltk_data_path():
     """
     if not __data_path__ + "/nltk_data" in nltk.data.path:
         nltk.data.path.append(__data_path__ + "/nltk_data")
+
+
+def split_list_by_dot(list_with_dot: List[str]) -> List[List[str]]:
+    """
+    Split a list into multiple lists based on elements that equal ".".
+    :param list_with_dot: A List of string that contains dots
+    :type list_with_dot: List[str]
+    :return: A List of sublists
+    :rtype: List[List[str]]
+    """
+    i = (list(g) for _, g in groupby(list_with_dot, key=".".__ne__))
+    return [
+        a + b if b != ["."] else a for a, b in zip_longest(i, i, fillvalue=[])
+    ]
 
 
 class PreprocessorGerman:
