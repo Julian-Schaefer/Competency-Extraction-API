@@ -1,5 +1,5 @@
 import json
-from typing import Dict
+from typing import Dict, List
 from neo4j import Record
 
 
@@ -92,10 +92,17 @@ class Competency:
 
 
 class Course:
-    def __init__(self, id: int, description: str, extractor: str):
+    def __init__(
+        self,
+        id: int,
+        description: str,
+        extractor: str,
+        competencies: List[Dict] = [],
+    ):
         self.id = id
         self.description = description
         self.extractor = extractor
+        self.competencies = competencies
 
     @staticmethod
     def fromDatabaseRecord(record: Record):
@@ -108,6 +115,16 @@ class Course:
         return course
 
     def toJSON(self) -> Dict:
+        if self.competencies:
+            competencies_json = [
+                competency.toJSON() for competency in self.competencies
+            ]
+            return {
+                "id": self.id,
+                "description": self.description,
+                "extractor": self.extractor,
+                "competencies": competencies_json,
+            }
         return {
             "id": self.id,
             "description": self.description,

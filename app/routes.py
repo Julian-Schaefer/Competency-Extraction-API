@@ -12,6 +12,7 @@ from app.competency_extractor import (
     PaperCompetencyExtractor,
 )
 import xml.etree.ElementTree as ET
+from app.models import Course
 
 routes = Blueprint("routes", __name__)
 
@@ -172,3 +173,44 @@ def retrieve_competency():
     db.close()
 
     return jsonify([competency.toJSON() for competency in competencies])
+
+
+@routes.route("/courses/export", methods=["POST"])
+def export_courses():
+
+    file_path = "data/exported_courses.json"
+
+    f = open(file_path, "w")
+
+    db = GraphDatabaseConnection()
+
+    try:
+        courses = db.retrieve_all_courses()
+    except RetrievingCompetencyFailed as e:
+        return Response(f"error: {e}", status=400, mimetype="application/json")
+
+    db.close()
+
+    courses_with_competencies = []
+
+    for course in courses:
+        course_id = course.id
+        try:
+            competencies = db.find_competencies_by_course(course_id)
+        except RetrievingCompetencyFailed as e:
+            return Response(
+                f"error: {e}", status=400, mimetype="application/json"
+            )
+        courses_with_competencies.append(
+            Course(
+                course.id, course.description, course.extractor, competencies
+            )
+        )
+
+    json_string = json.dumps(
+        [course.toJSON() for course in courses_with_competencies]
+    )
+
+    f.write(json_string)
+
+    return f"Database export was written into '{file_path}'."

@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 from xmlrpc.client import Boolean
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
@@ -52,32 +52,24 @@ class GraphDatabaseConnection:
         self.driver.close()
 
     def create_competency(self, competency: Competency) -> None:
-        """
-        Create competency
+        """Insert competeny with its properties and labels into the db
 
-        Insert competeny with its properties and labels into the db
+        :param competency: Competency with Properties and Labels
+        :type competency: Competency
 
-        Parameters:
-            competency: Competency with Properties and Labels
-
-        Raises: CompetencyInsertionFailed if insertion into DB failed
-
+        :raises CompetencyInsertionFailed: if insertion into DB failed
         """
         uri = competency.conceptUri
         if not self.retrieve_competency_by_uri(uri):
             self.create_competencies([competency])
 
     def create_competencies(self, competencies: List[Competency]) -> None:
-        """
-        Create competencies
+        """Insert competencies with their properties and labels into the db
 
-        Insert competencies with their properties and labels into the db
+        :param competencies: Competencies with Properties and Labels
+        :type competencies: List[Competency]
 
-        Parameters:
-            competencies: List of Competencies with Properties and Labels
-
-        Raises: CompetencyInsertionFailed if insertion into DB failed
-
+        :raises CompetencyInsertionFailed: if insertion into DB failed
         """
         with self.driver.session() as session:
             session.write_transaction(self._create_competencies, competencies)
@@ -161,17 +153,16 @@ class GraphDatabaseConnection:
         extractor: str,
         associated_competencies: List[Competency],
     ) -> Course:
-        """
-        Create course
+        """Insert Course with its description and associated competencies
 
-        Insert Course with its description and associated competencies
+        :param course_description: description of course
+        :type course_description: String
+        :param extractor: extractor used e.g. paper or ml
+        :type extractor: String
+        :param associated_competencies: associated competencies for this course description
+        :type associated_competencies: List[Competency]
 
-        Parameters:
-            course_description: course description as string
-            associated_competencies: associated competencies for this course description
-
-        Raises: CourseInsertionFailed if insertion into DB failed
-
+        :raises CourseInsertionFailed: if insertion into DB failed
         """
         associated_competencies_ids = [
             competency.id for competency in associated_competencies
@@ -249,16 +240,12 @@ class GraphDatabaseConnection:
         )
 
     def retrieve_all_courses(self) -> List[Course]:
-        """
-        Retrieve all courses
+        """Queries all nodes from the DB with the label course
 
-        Queries all nodes from the DB with the label course
+        :raises RetrievingCourseFailed: if retrieving courses failed
 
-        Raises: RetrievingCourseFailed if retrieving courses failed
-
-        Returns:
-        List of courses as dict
-
+        :return: All courses
+        :rtype: List[Course]
         """
         with self.driver.session() as session:
             course = session.write_transaction(self._retrieve_all_courses)
@@ -266,7 +253,7 @@ class GraphDatabaseConnection:
 
     @staticmethod
     def _retrieve_all_courses(tx) -> List[Course]:
-        query = "MATCH (c:Course) RETURN c AS result"
+        query = "MATCH (c:Course) RETURN c AS course"
         try:
             result = tx.run(
                 query,
@@ -278,16 +265,12 @@ class GraphDatabaseConnection:
         return courses
 
     def retrieve_all_competencies(self) -> List[Competency]:
-        """
-        Retrieve all competencies
+        """Queries all nodes from the DB with the label competency
 
-        Queries all nodes from the DB with the label competency
+        :raises RetrievingCompetencyFailed: if retrieving competencies failed
 
-        Raises: RetrievingCompetencyFailed if retrieving competencies failed
-
-        Returns:
-        List of competencies as dict
-
+        :return: all competencies
+        :rtype: List[Competency]
         """
         with self.driver.session() as session:
             competencies = session.write_transaction(
@@ -316,19 +299,16 @@ class GraphDatabaseConnection:
         return competencies
 
     def find_label_by_term(self, term) -> Boolean:
-        """Check if Label exists by term
-
-        Retrieves all labels containing this term and returns true, if there
+        """Retrieves all labels containing this term and returns true, if there
         is more than 1 label containing that term. Returns false otherwise.
 
-        Parameters:
-            term: a single word as string
+        :param term: a single term
+        :type term: String
 
-        Raises:
-            RetrievingLabelFailed if communication with the database goes wrong
+        :raises RetrievingLabelFailed: if communication with the database goes wrong
 
-        Returns:
-            If the term exists in a label as boolean
+        :return: If the term exists in a label
+        :rtype: Boolean
         """
         with self.driver.session() as session:
             is_found = session.write_transaction(
@@ -353,19 +333,16 @@ class GraphDatabaseConnection:
             raise RetrievingLabelFailed(f"{query} raised an error: \n {e}")
 
     def find_competency_by_sequence(self, sequence) -> List[Competency]:
-        """Find competency by Sequence
-
-        Find all competencies by matching their labels to the complete sequence that
+        """Find all competencies by matching their labels to the complete sequence that
         has been provided.
 
-        Parameters:
-            sequence: sequence of words as string
+        :param sequence: sequence of words
+        :type sequence: String
 
-        Raises:
-            RetrievingCompetencyFailed if communication with the database goes wrong
+        :raises RetrievingCompetencyFailed: if communication with the database goes wrong
 
-        Returns:
-            Matching competencies as dict
+        :return: Matching competencies
+        :rtype: List[Competency]
         """
         with self.driver.session() as session:
             competencies = session.write_transaction(
@@ -408,18 +385,15 @@ class GraphDatabaseConnection:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
 
     def find_courses_by_competency(self, competency_id: int) -> List[Course]:
-        """Find competencies by course
+        """Find courses by matching their competency provided by it's ID.
 
-        Find courses by matching their competency provided by it's ID.
+        :param competency_id: id of the competency
+        :type competency_id: Integer
 
-        Parameters:
-            competency_id: id of the competency as integer
+        :raises RetrievingCourseFailed: if communication with the database goes wrong
 
-        Raises:
-            RetrievingCourseFailed if communication with the database goes wrong
-
-        Returns:
-            Matching courses as list of dicts
+        :return: Matching courses
+        :rtype: List[Course]
         """
         with self.driver.session() as session:
             courses = session.write_transaction(
@@ -447,6 +421,16 @@ class GraphDatabaseConnection:
     def find_courses_by_text_query(
         self, text_search_query: str
     ) -> List[Course]:
+        """Find courses by text query.
+
+        :param text_search_query: text query
+        :type text_search_query: String
+
+        :raises RetrievingCourseFailed: if communication with the database goes wrong
+
+        :return: Matching courses
+        :rtype: List[Course]
+        """
         with self.driver.session() as session:
             courses = session.write_transaction(
                 self._find_courses_by_text_query, text_search_query
@@ -491,6 +475,16 @@ class GraphDatabaseConnection:
     def find_competencies_by_text_query(
         self, text_search_query: str
     ) -> List[Competency]:
+        """Find all competencies by text query
+
+        :param text_search_query: sequence of words
+        :type text_search_query: String
+
+        :raises RetrievingCompetencyFailed: if communication with the database goes wrong
+
+        :return: Matching competencies
+        :rtype: List[Competency]
+        """
         with self.driver.session() as session:
             competencies = session.write_transaction(
                 self._find_competencies_by_text_query, text_search_query
@@ -498,7 +492,7 @@ class GraphDatabaseConnection:
             return competencies
 
     @staticmethod
-    def _find_competencies_by_course(tx, course_id: int) -> Dict:
+    def _find_competencies_by_course(tx, course_id: int) -> Competency:
         query = "MATCH (com:Competency)<-[:MATCHES]-(cou:Course) where id(cou)=$id RETURN com AS competency"
 
         try:
@@ -517,19 +511,16 @@ class GraphDatabaseConnection:
                 f"{query} raised an error: \n {e}"
             )
 
-    def find_competencies_by_course(self, course_id: int) -> List[Dict]:
-        """Find courses by competency
+    def find_competencies_by_course(self, course_id: int) -> List[Competency]:
+        """Find competencies by matching the course that they are connected to provided by it's ID.
 
-        Find competencies by matching the course that they are connected to provided by it's ID.
+        :param course_id: id of the course
+        :type course_id: Integer
 
-        Parameters:
-            course_id: id of the course as integer
+        :raise RetrievingCompetencyFailed: if communication with the database goes wrong
 
-        Raises:
-            RetrievingCompetencyFailed if communication with the database goes wrong
-
-        Returns:
-            Matching competencies as list of dicts
+        :returns: Matching competencies
+        :rtype: List[Competency]
         """
         with self.driver.session() as session:
             competencies = session.write_transaction(

@@ -3,7 +3,6 @@ from app.db import GraphDatabaseConnection
 import pandas
 from app.preprocessing_utils import PreprocessorGerman
 from app.models import Competency, Label
-from pandas import DataFrame
 from typing import List
 
 
@@ -88,6 +87,7 @@ class StoreLocal:
     labels that are contained in the EU ESCO API.
     :type store_df: DataFrame
     """
+
     def __init__(self) -> None:
         """
         Constructor method
@@ -96,7 +96,7 @@ class StoreLocal:
         self.store_df = pandas.read_csv(
             r"C:\Users\amirm\OneDrive\Desktop\Python Projects\AWT-Project\app\all_skill_labels.csv",
             index_col=0,
-        )  ## change later
+        )  # change later
 
     def check_term(self, term: str) -> bool:
         """

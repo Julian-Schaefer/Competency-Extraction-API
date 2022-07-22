@@ -17,8 +17,12 @@ def create_spacy_file_from_df(df, train_or_test: str) -> None:
         if len(comp) != 0:
             indices = []
             for c in comp:
-                for m in re.finditer("(\.| )" + c + "(\.| )", " " + course_descr + " "):
-                    indices.append((m.start(), m.start() + len(c), "COMPETENCY"))
+                for m in re.finditer(
+                    "(\.| )" + c + "(\.| )", " " + course_descr + " "
+                ):
+                    indices.append(
+                        (m.start(), m.start() + len(c), "COMPETENCY")
+                    )
             data.append((course_descr, indices))
         else:
             data.append((course_descr, []))
@@ -48,7 +52,6 @@ def create_spacy_file_from_df(df, train_or_test: str) -> None:
 
     nlp = spacy.blank("de")
     db = DocBin()
-    end_of_loop = len(data2)
     for i, (text, annotations) in enumerate(data2):
         doc = nlp(text)
         ents = []
@@ -62,10 +65,16 @@ def create_spacy_file_from_df(df, train_or_test: str) -> None:
 
 def main():
     # load course DataFrame and delete rows with no preprocessed course description
-    courses_df = pd.read_csv(r"C:\Users\amirm\OneDrive\Desktop\Python "
-                             r"Projects\AWT-Project\data\courses_preprocessed.csv", sep="|", encoding="utf-8",
-                             index_col=0)[['course_descr_long_preprocessed', "competencies"]]
-    courses_df = courses_df[~courses_df["course_descr_long_preprocessed"].isna()]
+    courses_df = pd.read_csv(
+        r"C:\Users\amirm\OneDrive\Desktop\Python "
+        r"Projects\AWT-Project\data\courses_preprocessed.csv",
+        sep="|",
+        encoding="utf-8",
+        index_col=0,
+    )[["course_descr_long_preprocessed", "competencies"]]
+    courses_df = courses_df[
+        ~courses_df["course_descr_long_preprocessed"].isna()
+    ]
     # split DataFrame into training and testing
     training_data_df = courses_df.sample(frac=0.8, random_state=25)
     testing_data_df = courses_df.drop(training_data_df.index)
@@ -73,4 +82,3 @@ def main():
     # create spacy files for training and testing
     create_spacy_file_from_df(training_data_df, "train")
     create_spacy_file_from_df(testing_data_df, "test")
-
