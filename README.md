@@ -8,6 +8,14 @@ Run the following in root folder to start the system:
 - `curl -X POST http://localhost:5000/competencies/initialize` Initialize the Database and Store (takes around 5 Minutes) or
 - Go to `http://localhost:5000/api/docs` and execute the "Initialize" Endpoint for Competencies
 
+## Set up the pre-commit hook
+
+If you haven't already run `pipenv install` and then run
+
+- `pre-commit install`
+
+The first time you commit something it will take a little longer to initialize the dependencies but usually the pre-commit hook only checks the diff, so it should be fast.
+
 ## Development
 
 Use the following commands for development (in the root folder):
