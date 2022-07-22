@@ -202,7 +202,9 @@ def export_courses():
                 f"error: {e}", status=400, mimetype="application/json"
             )
         courses_with_competencies.append(
-            Course(course.id, course.description, competencies)
+            Course(
+                course.id, course.description, course.extractor, competencies
+            )
         )
 
     json_string = json.dumps(

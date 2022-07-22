@@ -266,7 +266,7 @@ class GraphDatabaseConnection:
 
     @staticmethod
     def _retrieve_all_courses(tx) -> List[Course]:
-        query = "MATCH (c:Course) RETURN c AS result"
+        query = "MATCH (c:Course) RETURN c AS course"
         try:
             result = tx.run(
                 query,
