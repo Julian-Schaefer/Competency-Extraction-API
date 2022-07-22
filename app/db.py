@@ -1,9 +1,10 @@
-from typing import List, Optional, Dict
+from typing import List, Dict
 from xmlrpc.client import Boolean
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 import os
 from app.models import Competency, Course
+from app.preprocessing_utils import PreprocessorGerman
 
 
 class CompetencyInsertionFailed(Exception):
@@ -14,6 +15,12 @@ class CompetencyInsertionFailed(Exception):
 
 class CourseInsertionFailed(Exception):
     """Raised when course couldn't be inserted into the DB"""
+
+    pass
+
+
+class CourseAlreadyExists(Exception):
+    """Raised when course already exists in the DB"""
 
     pass
 
@@ -32,12 +39,6 @@ class RetrievingCompetencyFailed(Exception):
 
 class RetrievingLabelFailed(Exception):
     """Raised when label/s couldn't be retrieved"""
-
-    pass
-
-
-class CompetencyAndCourseInsertionFailed(Exception):
-    """Raised when relationship between competency and course could not be created"""
 
     pass
 
@@ -84,14 +85,27 @@ class GraphDatabaseConnection:
     @staticmethod
     def _create_competencies(tx, competencies: List[Competency]):
         for competency in competencies:
-            create_competency_query = "CREATE (com:Competency {conceptType:$conceptType, conceptUri:$conceptUri, competencyType:$competencyType, description:$description}) RETURN id(com) AS id"
+            create_competency_query = (
+                "CREATE (com:Competency {conceptType:$conceptType, conceptUri:$conceptUri, skillType:$skillType, "
+                "reuseLevel:$reuseLevel, preferredLabel:$preferredLabel, altLabels:$altLabels, hiddenLabels:$hiddenLabels, status:$status, "
+                "modifiedDate:$modifiedDate, scopeNote:$scopeNote, definition:$definition, inScheme:$inScheme, description:$description}) RETURN id(com) AS id"
+            )
 
             try:
                 result = tx.run(
                     create_competency_query,
                     conceptType=competency.conceptType,
                     conceptUri=competency.conceptUri,
-                    competencyType=competency.competencyType,
+                    skillType=competency.skillType,
+                    reuseLevel=competency.reuseLevel,
+                    preferredLabel=competency.preferredLabel,
+                    altLabels=competency.altLabels,
+                    hiddenLabels=competency.hiddenLabels,
+                    status=competency.status,
+                    modifiedDate=competency.modifiedDate,
+                    scopeNote=competency.scopeNote,
+                    definition=competency.definition,
+                    inScheme=competency.inScheme,
                     description=competency.description,
                 )
 
@@ -142,7 +156,10 @@ class GraphDatabaseConnection:
                     )
 
     def create_course(
-        self, course_description: str, associated_competencies
+        self,
+        course_description: str,
+        extractor: str,
+        associated_competencies: List[Competency],
     ) -> Course:
         """
         Create course
@@ -166,18 +183,46 @@ class GraphDatabaseConnection:
             course = session.write_transaction(
                 self._create_course_transaction,
                 course_description,
+                extractor,
                 associated_competencies_ids,
             )
             return course
 
     @staticmethod
     def _create_course_transaction(
-        tx, course_description: str, associated_competencies_ids
+        tx,
+        course_description: str,
+        extractor: str,
+        associated_competencies_ids: List[Competency],
     ) -> Course:
-        create_course_query = "CREATE (c:Course) SET c.description = $description RETURN id(c) AS id"
+        select_course_query = "MATCH (cou:Course) where cou.description = $description AND cou.extractor = $extractor RETURN cou AS course"
+        course_exists = False
+
         try:
             result = tx.run(
-                create_course_query, description=course_description
+                select_course_query,
+                description=course_description,
+                extractor=extractor,
+            )
+
+            if result and result.single():
+                course_exists = True
+        except Exception as e:
+            raise CourseInsertionFailed(
+                f"{select_course_query} raised an error: \n {e}"
+            )
+
+        if course_exists:
+            raise CourseAlreadyExists(
+                f"Course with extractor '{extractor}' and description '{course_description}' already exists."
+            )
+
+        create_course_query = "CREATE (c:Course) SET c.description = $description, c.extractor = $extractor RETURN id(c) AS id"
+        try:
+            result = tx.run(
+                create_course_query,
+                description=course_description,
+                extractor=extractor,
             )
             course_id = result.single()["id"]
         except ClientError as e:
@@ -199,7 +244,9 @@ class GraphDatabaseConnection:
                     f"{create_relation_query} raised an error: \n {e}"
                 )
 
-        return Course(id=course_id, description=course_description)
+        return Course(
+            id=course_id, description=course_description, extractor=extractor
+        )
 
     def retrieve_all_courses(self) -> List[Course]:
         """
@@ -227,14 +274,7 @@ class GraphDatabaseConnection:
         except ClientError as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
 
-        courses = [
-            Course(
-                id=c["result"].id,
-                description=c["result"]._properties["description"],
-            )
-            for c in result
-        ]
-
+        courses = [Course.fromDatabaseRecord(record) for record in result]
         return courses
 
     def retrieve_all_competencies(self) -> List[Competency]:
@@ -271,428 +311,9 @@ class GraphDatabaseConnection:
             return None
 
         competencies = [
-            Competency(
-                id=record["competency"].id,
-                competencyType=record["competency"]._properties[
-                    "competencyType"
-                ],
-                conceptType=record["competency"]._properties["conceptType"],
-                conceptUri=record["competency"]._properties["conceptUri"],
-                description=record["competency"]._properties["description"],
-            )
-            for record in result
+            Competency.fromDatabaseRecord(record) for record in result
         ]
         return competencies
-
-    def retrieve_competency_by_uri(self, uri) -> Optional[Dict]:
-        """
-        Retrieve competency by name
-
-        Query nodes with label Competency that have name competencyName
-
-        Parameters:
-            competencyName: competency name as string
-
-        Raises:
-            RetrievingCompetencyFailed if retrieving competency failed
-
-        Returns:
-            Competency as dict or None
-        """
-        with self.driver.session() as session:
-            competency = session.write_transaction(
-                self._retrieve_competency_by_uri, uri
-            )
-            return competency
-
-    @staticmethod
-    def _retrieve_competency_by_uri(tx, uri) -> Optional[Dict]:
-        query = "MATCH (com:Competency) WHERE com.conceptUri=$uri RETURN id(com) AS id"
-        try:
-            result = tx.run(query, uri=uri)
-        except ClientError as e:
-            raise RetrievingCompetencyFailed(
-                f"{query} raised an error: \n {e}"
-            )
-        if not result:
-            return None
-        result = result.single()
-        if not result:
-            return None
-        return result["id"]
-
-    @staticmethod
-    def _retrieve_course_by_name(tx, courseName) -> Optional[Dict]:
-        query = "MATCH (c:Course) WHERE c.name=$name RETURN [id(c), c.name, c.body] AS result"
-        try:
-            result = tx.run(query, name=courseName)
-        except ClientError as e:
-            raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
-        if not result:
-            return None
-        result = result.single()
-        if not result:
-            return None
-        result = result["result"]
-        course = {"id": result[0], "name": result[1], "body": result[2]}
-
-        return course
-
-    def retrieve_course_by_name(self, courseName) -> Optional[Dict]:
-        """
-        Retrieve course by name
-
-        Query nodes with label Course that have name courseName
-
-        Parameters:
-            courseName: course name as string
-
-        Raises:
-            RetrievingCourseFailed if retrieving course failed
-
-        Returns:
-            Course as dict or None
-        """
-        with self.driver.session() as session:
-            competency = session.write_transaction(
-                self._retrieve_course_by_name, courseName
-            )
-            return competency
-
-    @staticmethod
-    def _insert_course_with_nonexisting_competency(
-        tx, competencyName, competencyBody, courseName, courseBody
-    ) -> Dict:
-        query = "CREATE (cou:Course {name:$courseName, body:$courseBody})-[r:HAS]->(com:Competency {name:$competencyName, body:$competencyBody}) RETURN [id(cou), cou.name, cou.body, id(com), com.name, com.body] AS result"
-        try:
-            result = tx.run(
-                query,
-                competencyName=competencyName,
-                competencyBody=competencyBody,
-                courseName=courseName,
-                courseBody=courseBody,
-            )
-        except ClientError as e:
-            raise CompetencyAndCourseInsertionFailed(
-                f"{query} raised an error: \n {e}"
-            )
-
-        if not result:
-            return None
-        result = result.single()
-        if not result:
-            return None
-        result = result["result"]
-        course_and_competency = {
-            "course_id": result[0],
-            "course_name": result[1],
-            "course_body": result[2],
-            "competency_id": result[3],
-            "competency_name": result[4],
-            "competency_body": result[5],
-        }
-        return course_and_competency
-
-    def insert_course_with_nonexisting_competency(
-        self, competencyName, competencyBody, courseName, courseBody
-    ) -> Dict:
-        """
-        Insert course with nonexisting competency
-
-        Create a new course and HAS relationship to a new competency
-
-        Parameters:
-            competencyName: competency name as string
-            competencyBody: competency body as string
-            courseName: course name as string
-            courseBody: course body as string
-
-        Raises:
-            CompetencyAndCourseInsertionFailed if creating failed
-
-        Returns:
-            Course and competency as dict
-        """
-        with self.driver.session() as session:
-            competency_and_course = session.write_transaction(
-                self._insert_course_with_nonexisting_competency,
-                competencyName,
-                competencyBody,
-                courseName,
-                courseBody,
-            )
-            return competency_and_course
-
-    @staticmethod
-    def _insert_course_with_existing_competency(
-        tx, competencyId, courseName, courseBody
-    ) -> Dict:
-        query = "MATCH (com:Competency) WHERE id(com)=$competencyId CREATE (cou:Course {name:$courseName, body:$courseBody})-[r:HAS]->(com) RETURN [id(cou), cou.name, cou.body, id(com), com.name, com.body] AS result"
-        try:
-            result = tx.run(
-                query,
-                competencyId=competencyId,
-                courseName=courseName,
-                courseBody=courseBody,
-            )
-        except ClientError as e:
-            raise CompetencyAndCourseInsertionFailed(
-                f"{query} raised an error: \n {e}"
-            )
-        if not result:
-            return None
-        result = result.single()
-        if not result:
-            return None
-        result = result["result"]
-        course_and_competency = {
-            "course_id": result[0],
-            "course_name": result[1],
-            "course_body": result[2],
-            "competency_id": result[3],
-            "competency_name": result[4],
-            "competency_body": result[5],
-        }
-        return course_and_competency
-
-    def insert_course_with_existing_competency(
-        self, competencyId, courseName, courseBody
-    ) -> Dict:
-        """Insert course with existing competency
-
-        Create a new course and HAS relationship to an existing competency
-
-        Parameters:
-            competencyId: id of the existing competency
-            courseName: course name as string
-            courseBody: course body as string
-
-        Raises:
-            CompetencyAndCourseInsertionFailed if creating failed
-
-        Returns:
-            Course and competency as dict
-        """
-        with self.driver.session() as session:
-            competency_and_course = session.write_transaction(
-                self._insert_course_with_existing_competency,
-                competencyId,
-                courseName,
-                courseBody,
-            )
-            return competency_and_course
-
-    @staticmethod
-    def _insert_competency_with_existing_course(
-        tx, competencyName, competencyBody, courseId
-    ) -> Dict:
-        query = "MATCH (cou:Course) WHERE id(cou)=$courseId CREATE (cou)-[r:HAS]->(com:Competency {name:$competencyName, body:$competencyBody}) RETURN [id(cou), cou.name, cou.body, id(com), com.name, com.body] AS result"
-        try:
-            result = tx.run(
-                query,
-                courseId=courseId,
-                competencyName=competencyName,
-                competencyBody=competencyBody,
-            )
-        except ClientError as e:
-            raise CompetencyAndCourseInsertionFailed(
-                f"{query} raised an error: \n {e}"
-            )
-        if not result:
-            return None
-        result = result.single()
-        if not result:
-            return None
-        result = result["result"]
-        course_and_competency = {
-            "course_id": result[0],
-            "course_name": result[1],
-            "course_body": result[2],
-            "competency_id": result[3],
-            "competency_name": result[4],
-            "competency_body": result[5],
-        }
-        return course_and_competency
-
-    def insert_competency_with_existing_course(
-        self, competencyName, competencyBody, courseId
-    ) -> Dict:
-        """Insert competency with existing course
-
-        Create a new competency and HAS relationship from an existing course
-
-        Parameters:
-            competencyName: competency name as string
-            competencyBody: competency body as string
-            courseId: id of the existing course
-
-        Raises:
-            CompetencyAndCourseInsertionFailed if creating failed
-
-        Returns:
-            Course and competency as dict
-        """
-        with self.driver.session() as session:
-            competency_and_course = session.write_transaction(
-                self._insert_competency_with_existing_course,
-                competencyName,
-                competencyBody,
-                courseId,
-            )
-            return competency_and_course
-
-    @staticmethod
-    def _retrieve_existing_relationship(tx, competencyId, courseId) -> Dict:
-        query = "MATCH (cou:Course), (com: Competency) WHERE id(cou)=$courseId AND id(com)=$competencyId AND (cou)-[:HAS]->(com) RETURN [id(cou), cou.name, cou.body, id(com), com.name, com.body] AS result"
-        try:
-            result = tx.run(
-                query,
-                competencyId=competencyId,
-                courseId=courseId,
-            )
-        except ClientError as e:
-            raise CompetencyAndCourseInsertionFailed(
-                f"{query} raised an error: \n {e}"
-            )
-
-        if not result:
-            return None
-        result = result.single()
-        if not result:
-            return None
-        result = result["result"]
-        course_and_competency = {
-            "course_id": result[0],
-            "course_name": result[1],
-            "course_body": result[2],
-            "competency_id": result[3],
-            "competency_name": result[4],
-            "competency_body": result[5],
-        }
-        return course_and_competency
-
-    def retrieve_existing_relationship(
-        self, courseId, competencyId
-    ) -> List[Optional[Dict]]:
-        """Retrieve existing relationship
-
-        Retrieve HAS relationship between given competency and course
-
-        Parameters:
-            competencyId: Id of the existing competency
-            courseId: id of the existing course
-
-        Raises:
-            CompetencyAndCourseInsertionFailed if creating failed
-
-        Returns:
-            Course and competency as dict
-        """
-        with self.driver.session() as session:
-            relationship = session.write_transaction(
-                self._retrieve_existing_relationship,
-                competencyId,
-                courseId,
-            )
-            return relationship
-
-    @staticmethod
-    def _insert_relationship_for_existing(tx, competencyId, courseId) -> Dict:
-        query = "MATCH (cou:Course) WHERE id(cou)=$courseId MATCH (com:Competency) WHERE id(com)=$competencyId CREATE (cou)-[r:HAS]->(com) RETURN [id(cou), cou.name, cou.body, id(com), com.name, com.body] AS result"
-        try:
-            result = tx.run(
-                query,
-                competencyId=competencyId,
-                courseId=courseId,
-            )
-        except ClientError as e:
-            raise CompetencyAndCourseInsertionFailed(
-                f"{query} raised an error: \n {e}"
-            )
-
-        if not result:
-            return None
-        result = result.single()
-        if not result:
-            return None
-        result = result["result"]
-        course_and_competency = {
-            "course_id": result[0],
-            "course_name": result[1],
-            "course_body": result[2],
-            "competency_id": result[3],
-            "competency_name": result[4],
-            "competency_body": result[5],
-        }
-        return course_and_competency
-
-    def insert_relationship_for_existing(self, competencyId, courseId) -> Dict:
-        """Insert relationship for existing
-
-        Create a new HAS relationship between existing course and competency
-
-        Parameters:
-            competencyId: Id of existing competency
-            courseId: id of the existing course
-
-        Raises:
-            CompetencyAndCourseInsertionFailed if creating failed
-
-        Returns:
-            Course and competency as dict
-        """
-        if self.retrieve_existing_relationship(courseId, competencyId):
-            raise CompetencyAndCourseInsertionFailed(
-                f"Competency {competencyId} and course {courseId} already have a relationship."
-            )
-        with self.driver.session() as session:
-            competency_and_course = session.write_transaction(
-                self._insert_relationship_for_existing,
-                competencyId,
-                courseId,
-            )
-            return competency_and_course
-
-    def create_competecy_course_connection(
-        self, courseName, courseBody, competencyName, competecyBody
-    ) -> Dict:
-        """Create competency course connection
-
-        Create a new HAS relationship between course and competency avoiding duplicates
-
-        Parameters:
-            competencyName: competency name as string
-            competencyBody: competency body as string
-            courseName: course name as string
-            courseBody: course body as string
-
-        Raises:
-            CompetencyAndCourseInsertionFailed if creating failed
-
-        Returns:
-            Course and competency as dict
-        """
-        existing_competency = self.retrieve_competency_by_name(competencyName)
-        existing_course = self.retrieve_course_by_name(courseName)
-
-        if existing_course and existing_competency:
-            return self.insert_relationship_for_existing(
-                existing_competency.get("id"), existing_course.get("id")
-            )
-
-        if existing_course and not existing_competency:
-            return self.insert_competency_with_existing_course(
-                competencyName, competecyBody, existing_course.get("id")
-            )
-        if not existing_course and existing_competency:
-            return self.insert_course_with_existing_competency(
-                existing_competency["id"], courseName, courseBody
-            )
-
-        # competency and course both don't exist yet
-        return self.insert_course_with_nonexisting_competency(
-            competencyName, competecyBody, courseName, courseBody
-        )
 
     def find_label_by_term(self, term) -> Boolean:
         """Check if Label exists by term
@@ -763,20 +384,7 @@ class GraphDatabaseConnection:
                 return None
 
             competencies = [
-                Competency(
-                    id=record["competency"].id,
-                    competencyType=record["competency"]._properties[
-                        "competencyType"
-                    ],
-                    conceptType=record["competency"]._properties[
-                        "conceptType"
-                    ],
-                    conceptUri=record["competency"]._properties["conceptUri"],
-                    description=record["competency"]._properties[
-                        "description"
-                    ],
-                )
-                for record in result
+                Competency.fromDatabaseRecord(record) for record in result
             ]
             return competencies
         except Exception as e:
@@ -794,13 +402,7 @@ class GraphDatabaseConnection:
             if not result:
                 return None
 
-            courses = [
-                Course(
-                    id=record["course"].id,
-                    description=record["course"]._properties["description"],
-                )
-                for record in result
-            ]
+            courses = [Course.fromDatabaseRecord(record) for record in result]
             return courses
         except Exception as e:
             raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
@@ -826,6 +428,76 @@ class GraphDatabaseConnection:
             return courses
 
     @staticmethod
+    def _find_courses_by_text_query(
+        tx, text_search_query: str
+    ) -> List[Course]:
+        query = "MATCH (cou:Course) where cou.description CONTAINS $text_search_query RETURN cou AS course"
+
+        try:
+            result = tx.run(query, text_search_query=text_search_query)
+
+            if not result:
+                return None
+
+            courses = [Course.fromDatabaseRecord(record) for record in result]
+            return courses
+        except Exception as e:
+            raise RetrievingCourseFailed(f"{query} raised an error: \n {e}")
+
+    def find_courses_by_text_query(
+        self, text_search_query: str
+    ) -> List[Course]:
+        with self.driver.session() as session:
+            courses = session.write_transaction(
+                self._find_courses_by_text_query, text_search_query
+            )
+            return courses
+
+    @staticmethod
+    def _find_competencies_by_text_query(
+        tx, text_search_query: str
+    ) -> List[Competency]:
+        prepocessor = PreprocessorGerman()
+        processed_search_query = prepocessor.preprocess_texts(
+            [text_search_query]
+        )
+        processed_search_query = " ".join(processed_search_query[0])
+
+        query = (
+            "MATCH (com:Competency) WHERE com.description CONTAINS $text_search_query RETURN com AS competency"
+            " UNION "
+            "MATCH (lab:Label)<-[:IDENTIFIED_BY]-(com:Competency) WHERE lab.text CONTAINS $processed_search_query RETURN com AS competency"
+        )
+
+        try:
+            result = tx.run(
+                query,
+                text_search_query=text_search_query,
+                processed_search_query=processed_search_query,
+            )
+
+            if not result:
+                return None
+
+            competencies = [
+                Competency.fromDatabaseRecord(record) for record in result
+            ]
+            return competencies
+        except Exception as e:
+            raise RetrievingCompetencyFailed(
+                f"{query} raised an error: \n {e}"
+            )
+
+    def find_competencies_by_text_query(
+        self, text_search_query: str
+    ) -> List[Competency]:
+        with self.driver.session() as session:
+            competencies = session.write_transaction(
+                self._find_competencies_by_text_query, text_search_query
+            )
+            return competencies
+
+    @staticmethod
     def _find_competencies_by_course(tx, course_id: int) -> Dict:
         query = "MATCH (com:Competency)<-[:MATCHES]-(cou:Course) where id(cou)=$id RETURN com AS competency"
 
@@ -836,20 +508,7 @@ class GraphDatabaseConnection:
                 return None
 
             competencies = [
-                Competency(
-                    id=record["competency"].id,
-                    competencyType=record["competency"]._properties[
-                        "competencyType"
-                    ],
-                    conceptType=record["competency"]._properties[
-                        "conceptType"
-                    ],
-                    conceptUri=record["competency"]._properties["conceptUri"],
-                    description=record["competency"]._properties[
-                        "description"
-                    ],
-                )
-                for record in result
+                Competency.fromDatabaseRecord(record) for record in result
             ]
 
             return competencies

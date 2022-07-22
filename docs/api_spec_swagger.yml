@@ -7,24 +7,36 @@ info:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 tags:
-- name: competency
+- name: Competencies
   description: Add and query competencies
   externalDocs:
     description: EU ESCO
     url: "https://esco.ec.europa.eu/en/classification/skill?uri=http%3A%2F%2Fdata.europa.eu%2Fesco%2Fskill%2FA1.1.0"
-- name: course
+- name: Courses
   description: Add and query courses
 paths:
-  /course:
+  /courses:
     post:
       tags:
-      - course
+      - Courses
       summary: Add a new course
       description: Add a new course
       operationId: addCourse
+      parameters:
+      - in: query
+        name: extractor
+        description: Type of Competency Extractor to use
+        required: false
+        schema:
+          type: string
+          enum:
+            - paper
+            - ml
       responses:
+        '409':
+          description: Course already exists.
         '400':
-          description: Invalid input
+          description: Invalid input.
         '200':
           description: Course was added successfully.
           content:
@@ -38,10 +50,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CourseBody'
-  /courses:
     get:
       tags:
-      - course
+      - Courses
       summary: Query for courses
       description: Query for courses
       operationId: retrieveCourses
@@ -52,9 +63,15 @@ paths:
         required: false
         schema:
           type: integer
+      - in: query
+        name: search
+        description: Filter courses based on a search text (optional)
+        required: false
+        schema:
+          type: string
       responses:
         '400':
-          description: Invalid input
+          description: Invalid input.
         '200':
           description: Query result for courses.
           content:
@@ -63,33 +80,39 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Course'
-  /initialize:
+  /competencies/initialize:
     post:
       tags:
-      - competency
+      - Competencies
       summary: Initialize the database with EU-ESCO competencies
       description: Initialize the database with EU-ESCO competencies
       operationId: initialize
       responses:
         '200':
           description: Database and Store have been initialized successfully!
-  /competency:
+  /competencies:
     get:
       tags:
-      - competency
+      - Competencies
       summary: Query for competencies
       description: Query for competencies
       operationId: retrieveCompetencies
       parameters:
       - in: query
         name: courseId
-        description: Filter competencies by course
+        description: Filter competencies by course (optional)
         required: false
         schema:
           type: integer
+      - in: query
+        name: search
+        description: Filter courses based on a search text (optional)
+        required: false
+        schema:
+          type: string
       responses:
         '400':
-          description: Invalid input
+          description: Invalid input.
         '200':
           description: Query result for competencies.
           content:

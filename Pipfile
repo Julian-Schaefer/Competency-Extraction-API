@@ -17,6 +17,7 @@ hanta = "*"
 lxml = "*"
 python-dotenv = "*"
 flask-swagger-ui = "*"
+matplotlib = "*"
 
 [dev-packages]
 black = "*"
