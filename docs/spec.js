@@ -11,7 +11,7 @@ var spec = {
   },
   "tags": [
     {
-      "name": "competency",
+      "name": "Competencies",
       "description": "Add and query competencies",
       "externalDocs": {
         "description": "EU ESCO",
@@ -19,36 +19,50 @@ var spec = {
       }
     },
     {
-      "name": "course",
+      "name": "Courses",
       "description": "Add and query courses"
-    },
-    {
-      "name": "relation",
-      "description": "Add relationships between courses and competencies"
     }
   ],
   "paths": {
-    "/course": {
+    "/courses": {
       "post": {
         "tags": [
-          "course"
+          "Courses"
         ],
         "summary": "Add a new course",
         "description": "Add a new course",
         "operationId": "addCourse",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "extractor",
+            "description": "Type of Competency Extractor to use",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "paper",
+                "ml"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Course was added successfully.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Course"
+                  "$ref": "#/components/schemas/CourseAddedSuccess"
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input"
+            "description": "Invalid input."
+          },
+          "409": {
+            "description": "Course already exists."
           }
         },
         "requestBody": {
@@ -59,154 +73,141 @@ var spec = {
               "schema": {
                 "$ref": "#/components/schemas/CourseBody"
               }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "courses": {
+                    "format": "xml"
+                  }
+                }
+              }
             }
           }
         }
       },
       "get": {
         "tags": [
-          "course"
+          "Courses"
         ],
         "summary": "Query for courses",
         "description": "Query for courses",
         "operationId": "retrieveCourses",
-        "responses": {
-          "200": {
-            "description": "Query result for courses.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Course"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          }
-        }
-      }
-    },
-    "/course/{competencyId}": {
-      "get": {
-        "tags": [
-          "course"
-        ],
-        "summary": "Query for courses",
-        "description": "Query for courses",
-        "operationId": "retrieveCoursesByCompetency",
-        "responses": {
-          "200": {
-            "description": "Query result for courses.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Course"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          }
-        },
         "parameters": [
           {
-            "in": "path",
+            "in": "query",
             "name": "competencyId",
-            "description": "Filter courses by competency",
-            "required": true,
+            "description": "Filter courses by competency (optional)",
+            "required": false,
             "schema": {
-              "$ref": "#/components/schemas/CompetencyId"
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "description": "Filter courses based on a search text (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
-        ]
-      }
-    },
-    "/competency": {
-      "get": {
-        "tags": [
-          "competency"
         ],
-        "summary": "Query for competencies",
-        "description": "Query for competencies",
-        "operationId": "retrieveCompetencies",
         "responses": {
           "200": {
-            "description": "Query result for competencies.",
+            "description": "Query result for courses.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Competency"
+                    "$ref": "#/components/schemas/Course"
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input"
+            "description": "Invalid input."
           }
         }
       }
     },
-    "/competency/{courseId}": {
-      "get": {
-        "tags": [
-          "competency"
-        ],
-        "summary": "Query for competencies",
-        "description": "Query for competencies",
-        "operationId": "retrieveCompetenciesByCourse",
-        "responses": {
-          "200": {
-            "description": "Query result for competencies.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Competency"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          }
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "courseId",
-            "description": "Filter competencies by course",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/CourseId"
-            }
-          }
-        ]
-      }
-    },
-    "/initialize": {
+    "/competencies/initialize": {
       "post": {
         "tags": [
-          "competency"
+          "Competencies"
         ],
         "summary": "Initialize the database with EU-ESCO competencies",
         "description": "Initialize the database with EU-ESCO competencies",
         "operationId": "initialize",
         "responses": {
           "200": {
-            "description": "Database and Store have been initialized successfully"
+            "description": "Database and Store have been initialized successfully!"
+          }
+        }
+      }
+    },
+    "/competencies": {
+      "get": {
+        "tags": [
+          "Competencies"
+        ],
+        "summary": "Query for competencies",
+        "description": "Query for competencies",
+        "operationId": "retrieveCompetencies",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "courseId",
+            "description": "Filter competencies by course (optional)",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "description": "Filter courses based on a search text (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Query result for competencies.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Competency"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input."
+          }
+        }
+      }
+    },
+    "/courses/export": {
+      "post": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Export courses",
+        "description": "Export courses with their competencies to file",
+        "operationId": "exportCourses",
+        "responses": {
+          "200": {
+            "description": "Courses were written to file successfully."
           }
         }
       }
@@ -214,23 +215,26 @@ var spec = {
   },
   "components": {
     "schemas": {
+      "CourseAddedSuccess": {
+        "properties": {
+          "course": {
+            "$ref": "#/components/schemas/Course"
+          },
+          "competencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Competency"
+            }
+          }
+        }
+      },
       "Course": {
         "properties": {
           "id": {
             "type": "integer"
           },
-          "name": {
+          "description": {
             "type": "string"
-          },
-          "body": {
-            "type": "string"
-          }
-        }
-      },
-      "CourseId": {
-        "properties": {
-          "course_id": {
-            "type": "integer"
           }
         }
       },
@@ -246,18 +250,17 @@ var spec = {
           "id": {
             "type": "integer"
           },
-          "name": {
+          "competencyType": {
             "type": "string"
           },
-          "body": {
+          "conceptType": {
             "type": "string"
-          }
-        }
-      },
-      "CompetencyId": {
-        "properties": {
-          "competency_id": {
-            "type": "integer"
+          },
+          "conceptUri": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
           }
         }
       }

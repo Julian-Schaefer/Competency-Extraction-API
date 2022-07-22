@@ -175,7 +175,7 @@ def retrieve_competency():
     return jsonify([competency.toJSON() for competency in competencies])
 
 
-@routes.route("/export", methods=["POST"])
+@routes.route("/courses/export", methods=["POST"])
 def export_courses():
 
     file_path = "data/exported_courses.json"
