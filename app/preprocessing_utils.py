@@ -7,7 +7,7 @@ import numpy as np
 from itertools import groupby, zip_longest
 import json
 
-__data_path__ = os.path.dirname(__file__) + "/lemma_cache_data"
+__data_path__ = os.path.join(os.path.dirname(__file__), "./lemma_cache_data")
 
 
 def add_nltk_data_path():
@@ -50,27 +50,25 @@ class PreprocessorGerman:
             self.stopwords = list(map(str.strip, list(f)))
 
     @staticmethod
-    def convert_to_series(course_descriptions: List[str]) -> pd.Series:
+    def convert_to_series(texts: List[str]) -> pd.Series:
         """
         Convert a list of course descriptions into a Pandas Series. Also remove any newline characters.
-        :param course_descriptions: A List of course descriptions
-        :type course_descriptions: List[str]
+        :param texts: A List of course descriptions
+        :type texts: List[str]
         :return: The list of course descriptions as a Pandas Series with newline characters removed
         :rtype: pd.Series[str]
         """
-        return pd.Series(course_descriptions, name="form").map(
-            lambda x: x.replace("\n", "")
-        )
+        return pd.Series(texts, name="form").map(lambda x: x.replace("\n", ""))
 
-    def tokenize(self, course_descriptions: pd.Series) -> pd.Series:
+    def tokenize(self, texts: pd.Series) -> pd.Series:
         """
         Tokenize a Series of course descriptions.
-        :param course_descriptions: A Series of course descriptions
-        :type course_descriptions: pd.Series[str]
+        :param texts: A Series of course descriptions
+        :type texts: pd.Series[str]
         :return: A Series of tokenized course descriptions, where each description is a Series itself
         :rtype: pd.Series[pd.Series[str]]
         """
-        return course_descriptions.map(
+        return texts.map(
             lambda x: pd.Series(
                 nltk.word_tokenize(x, language=self.language),
                 name="form",
@@ -79,18 +77,18 @@ class PreprocessorGerman:
         )
 
     @staticmethod
-    def remove_punctuation(course_descriptions: pd.Series) -> pd.Series:
+    def remove_punctuation(texts: pd.Series) -> pd.Series:
         """
         Remove punctuation from a series of tokenized course descriptions. If a token only consists of punctuation
         characters it is removed entirely, unless the token is just one dot. In that case the token is kept.
         Hyphens that do not appear at the start or end of a token are not removed.
-        :param course_descriptions: A Series of tokenized course descriptions
-        :type course_descriptions: pd.Series[pd.Series[str]]
+        :param texts: A Series of tokenized course descriptions
+        :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions with punctuation removed
         :rtype: pd.Series[pd.Series[str]]
         """
         punct = string.punctuation.replace("-", "")
-        course_descriptions = course_descriptions.map(
+        texts = texts.map(
             lambda x: x.where(
                 x == ".",
                 other=x.map(
@@ -100,52 +98,48 @@ class PreprocessorGerman:
                 ),
             )
         )
-        return course_descriptions.map(lambda x: x.drop(x[x == ""].index))
+        return texts.map(lambda x: x.drop(x[x == ""].index))
 
     @staticmethod
-    def remove_numeric_tokens(course_descriptions: pd.Series) -> pd.Series:
+    def remove_numeric_tokens(texts: pd.Series) -> pd.Series:
         """
         Remove numeric tokens from a Series of tokenized course descriptions.
-        :param course_descriptions: A Series of tokenized course descriptions
-        :type course_descriptions: pd.Series[pd.Series[str]]
+        :param texts: A Series of tokenized course descriptions
+        :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions with numeric tokens removed
         :rtype: pd.Series[pd.Series[str]]
         """
-        return course_descriptions.map(lambda x: x[~x.str.isnumeric()])
+        return texts.map(lambda x: x[~x.str.isnumeric()])
 
-    def remove_stopwords(self, course_descriptions: pd.Series) -> pd.Series:
+    def remove_stopwords(self, texts: pd.Series) -> pd.Series:
         """
         Remove stopwords from a Series of tokenized course descriptions.
-        :param course_descriptions: A Series of tokenized course descriptions
-        :type course_descriptions: pd.Series[pd.Series[str]]
+        :param texts: A Series of tokenized course descriptions
+        :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions with stopwords removed
         :rtype: pd.Series[pd.Series[str]]
         """
-        return course_descriptions.map(
-            lambda x: x[~x.str.lower().isin(self.stopwords)]
-        )
+        return texts.map(lambda x: x[~x.str.lower().isin(self.stopwords)])
 
-    def lemmatize_morphys_fast(
-        self, course_descriptions: pd.Series
-    ) -> pd.Series:
+    def lemmatize_morphys_fast(self, texts: pd.Series) -> pd.Series:
         """
         Lemmatize a Series of tokenized course descriptions using the Morphys lookup table.
         Compound words that are written using hyphen notation, that do not appear in the lookup table are first split
         into their compounds, then the lemma for each compound is searched in the table, and finally the lemmas of
         each compound are joined back together separated by hyphens.
         If a token does not appear in the lookup table, the token itself is used as the lemma.
-        :param course_descriptions: A Series of tokenized course descriptions
-        :type course_descriptions: pd.Series[pd.Series[str]]
+        :param texts: A Series of tokenized course descriptions
+        :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions where each token is lemmatized
         :rtype: pd.Series[pd.Series[str]]
         """
         ## get slices to split concatenated series back into original series
-        indices_end = np.array(course_descriptions.map(len)).cumsum()
+        indices_end = np.array(texts.map(len)).cumsum()
         indices_start = np.insert(indices_end[:-1], obj=0, values=0)
         slices = zip(indices_start, indices_end)
 
         ## concatenate all course descriptions into one series
-        df = pd.concat(course_descriptions.tolist(), axis=0, ignore_index=True)
+        df = pd.concat(texts.tolist(), axis=0, ignore_index=True)
 
         ## expand morphys by lemmas of compounds terms seperated by hyphens
         df_hyphens = df[df.str.contains("-")]
@@ -175,73 +169,58 @@ class PreprocessorGerman:
         return pd.Series([df.iloc[start:end] for start, end in slices])
 
     @staticmethod
-    def lowercase(course_descriptions: pd.Series) -> pd.Series:
+    def lowercase(texts: pd.Series) -> pd.Series:
         """
         Lowercase a Series of tokenized course descriptions.
-        :param course_descriptions: A Series of tokenized course descriptions
-        :type course_descriptions: pd.Series[pd.Series[str]]
+        :param texts: A Series of tokenized course descriptions
+        :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions with each token lowercased
         :rtype: pd.Series[pd.Series[str]]
         """
-        return course_descriptions.map(lambda x: x.map(str.lower))
+        return texts.map(lambda x: x.map(str.lower))
 
-    def preprocess_course_descriptions(
-        self, course_descriptions: List[str]
-    ) -> List[List[str]]:
+    def preprocess_texts(self, texts: List[str]) -> List[List[str]]:
         """
-        Preprocesses a list of course descriptions using the following pipeline:
+        Preprocesses a list of texts using the following pipeline:
         - tokenize
         - remove punctuation
         - remove numeric tokens
         - remove stopwords
         - lemmatize using the morphys lemmatizer
         - lowercase each token
-        :param course_descriptions: A list of course descriptions
-        :type course_descriptions: List[str]
-        :return: The preprocessed course descriptions
+        :param texts: A list of texts
+        :type texts: List[str]
+        :return: The preprocessed texts
         :rtype: List[List[str]]
         """
         # convert to series
-        processed_course_descriptions = self.convert_to_series(
-            course_descriptions
-        )
+        processed_texts = self.convert_to_series(texts)
 
         # tokenize
-        processed_course_descriptions = self.tokenize(
-            processed_course_descriptions
-        )
+        processed_texts = self.tokenize(processed_texts)
 
         # remove punctuation
-        processed_course_descriptions = self.remove_punctuation(
-            processed_course_descriptions
-        )
+        processed_texts = self.remove_punctuation(processed_texts)
 
         # remove numeric tokens
-        processed_course_descriptions = self.remove_numeric_tokens(
-            processed_course_descriptions
-        )
+        processed_texts = self.remove_numeric_tokens(processed_texts)
 
         # remove stopwords
-        processed_course_descriptions = self.remove_stopwords(
-            processed_course_descriptions
-        )
+        processed_texts = self.remove_stopwords(processed_texts)
 
         # lemmatize
-        processed_course_descriptions = self.lemmatize_morphys_fast(
-            processed_course_descriptions
-        )
+        processed_texts = self.lemmatize_morphys_fast(processed_texts)
 
         # lowercase
-        processed_course_descriptions = self.lowercase(
-            processed_course_descriptions
-        )
+        processed_texts = self.lowercase(processed_texts)
 
-        return processed_course_descriptions.map(pd.Series.tolist).tolist()
+        return processed_texts.map(pd.Series.tolist).tolist()
 
     def get_skills_from_file_as_json(self, file) -> str:
         """
         Reads the "skills_de.csv" into a json string and preprocesses the labels of each skill.
         The resulting json string contains a dictionary. The keys are the concept-URIs. Each key has 5 fields:
+        - conceptUri: str
         - conceptType: str
         - KnowledgeSkillCompetence: str
         - preferredLabel: str
@@ -261,8 +240,15 @@ class PreprocessorGerman:
                 "skillType",
                 "conceptUri",
                 "conceptType",
+                "reuseLevel",
                 "preferredLabel",
                 "altLabels",
+                "hiddenLabels",
+                "status",
+                "modifiedDate",
+                "scopeNote",
+                "definition",
+                "inScheme",
                 "description",
             ]
         ]
@@ -278,14 +264,12 @@ class PreprocessorGerman:
         ].reset_index(drop=True)
         df_with_alt_label["altLabels"] = df_with_alt_label["altLabels"]
         df_with_alt_label["altLabelsPreprocessed"] = pd.Series(
-            self.preprocess_course_descriptions(
-                df_with_alt_label["altLabels"].tolist()
-            )
+            self.preprocess_texts(df_with_alt_label["altLabels"].tolist())
         )
 
         # preprocess preferredLabel
         df["preferredLabelPreprocessed"] = pd.Series(
-            self.preprocess_course_descriptions(df["preferredLabel"])
+            self.preprocess_texts(df["preferredLabel"])
         )
 
         # merge into one DataFrame and set index to conceptUri
@@ -306,3 +290,16 @@ class PreprocessorGerman:
                 )
 
         return result
+
+    @staticmethod
+    def join_tokenized_texts(texts: List[List[str]]) -> List[str]:
+        """
+        Join tokenized texts into strings.
+        :param texts: List of tokenized texts
+        :type texts: List[List[str]]
+        :return: List of non tokenized texts
+        :rtype: List[str]
+        """
+        texts = pd.Series(texts)
+        texts = texts.map(lambda x: " ".join(x).replace(" .", "."))
+        return texts.tolist()
