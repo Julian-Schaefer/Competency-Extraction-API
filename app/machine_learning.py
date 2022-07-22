@@ -52,7 +52,6 @@ def create_spacy_file_from_df(df, train_or_test: str) -> None:
 
     nlp = spacy.blank("de")
     db = DocBin()
-
     for i, (text, annotations) in enumerate(data2):
         doc = nlp(text)
         ents = []
