@@ -1,5 +1,10 @@
+"""
+db.py
+====================================
+Everything related to interaction with the Graph Database
+"""
+
 from typing import List
-from xmlrpc.client import Boolean
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 import os
@@ -44,6 +49,8 @@ class RetrievingLabelFailed(Exception):
 
 
 class GraphDatabaseConnection:
+    """This class handles all interactions with the Neo4J Graph Database"""
+
     def __init__(self):
         db_uri = os.environ.get("DB_URI")
         self.driver = GraphDatabase.driver(db_uri, auth=("neo4j", "password"))
@@ -298,7 +305,7 @@ class GraphDatabaseConnection:
         ]
         return competencies
 
-    def find_label_by_term(self, term) -> Boolean:
+    def find_label_by_term(self, term) -> bool:
         """Retrieves all labels containing this term and returns true, if there
         is more than 1 label containing that term. Returns false otherwise.
 
@@ -308,7 +315,7 @@ class GraphDatabaseConnection:
         :raises RetrievingLabelFailed: if communication with the database goes wrong
 
         :return: If the term exists in a label
-        :rtype: Boolean
+        :rtype: bool
         """
         with self.driver.session() as session:
             is_found = session.write_transaction(
@@ -317,7 +324,7 @@ class GraphDatabaseConnection:
             return is_found
 
     @staticmethod
-    def _find_label_by_term(tx, term) -> Boolean:
+    def _find_label_by_term(tx, term) -> bool:
         query = "MATCH (lab:Label) where lab.text CONTAINS $term RETURN lab AS label"
 
         try:

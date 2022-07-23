@@ -1,3 +1,9 @@
+"""
+preprocessing_utils.py
+====================================
+Classes and Functions to preprocess texts
+"""
+
 import string
 import pandas as pd
 import nltk
@@ -11,9 +17,7 @@ __data_path__ = os.path.join(os.path.dirname(__file__), "./lemma_cache_data")
 
 
 def add_nltk_data_path():
-    """
-    Adds the directory ".\app\nltk_data" to the list of paths that the nltk library searches in for valid nltk models.
-    """
+    """Adds the directory ".\app\nltk_data" to the list of paths that the nltk library searches in for valid nltk models."""
     if not __data_path__ + "/nltk_data" in nltk.data.path:
         nltk.data.path.append(__data_path__ + "/nltk_data")
 
