@@ -6,6 +6,12 @@ from app.models import Competency, Label
 from typing import List
 
 
+class StoreAlreadyInitialized(Exception):
+    """Raised when the Store has already been initialized"""
+
+    pass
+
+
 class Store:
     def __init__(self, language="de"):
         self.db = GraphDatabaseConnection()
@@ -14,6 +20,10 @@ class Store:
             self.lemmatizer = PreprocessorGerman()
 
     def initialize(self):
+        existing_competencies = self.db.retrieve_all_competencies()
+        if existing_competencies and len(existing_competencies) > 0:
+            raise StoreAlreadyInitialized()
+
         data_file = pandas.read_csv(os.environ.get("DATA_FILE"))
         data_file["altLabels"] = data_file["altLabels"].astype("string")
 

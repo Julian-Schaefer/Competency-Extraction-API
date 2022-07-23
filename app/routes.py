@@ -6,7 +6,7 @@ from app.db import (
     RetrievingCourseFailed,
     RetrievingCompetencyFailed,
 )
-from app.store import Store
+from app.store import Store, StoreAlreadyInitialized
 from app.competency_extractor import (
     MLCompetencyExtractor,
     PaperCompetencyExtractor,
@@ -25,8 +25,11 @@ def hello():
 @routes.route("/competencies/initialize", methods=["POST"])
 def initialize():
     store = Store()
-    store.initialize()
-    return "Database and Store have been initialized with Competencies successfully!"
+    try:
+        store.initialize()
+        return "Database and Store have been initialized with Competencies successfully!"
+    except StoreAlreadyInitialized:
+        return "Database and Store have already been initialized.", 409
 
 
 def _get_competency_extractor_from_string(name):

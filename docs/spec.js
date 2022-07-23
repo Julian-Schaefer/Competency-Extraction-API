@@ -144,7 +144,10 @@ var spec = {
         "operationId": "initialize",
         "responses": {
           "200": {
-            "description": "Database and Store have been initialized successfully!"
+            "description": "Database and Store have been initialized with Competencies successfully!"
+          },
+          "409": {
+            "description": "Database and Store have already been initialized."
           }
         }
       }
