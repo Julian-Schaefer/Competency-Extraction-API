@@ -7,7 +7,7 @@ import numpy as np
 from itertools import groupby, zip_longest
 import json
 
-__data_path__ = os.path.join(os.path.dirname(__file__), "/lemma_cache_data")
+__data_path__ = os.path.join(os.path.dirname(__file__), "./lemma_cache_data")
 
 
 def add_nltk_data_path():
