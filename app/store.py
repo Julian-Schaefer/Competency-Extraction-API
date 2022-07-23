@@ -1,3 +1,9 @@
+"""
+store.py
+====================================
+Allows Initialization of Competencies and provides termStore and sequenceStore
+"""
+
 import os
 from app.db import GraphDatabaseConnection
 import pandas

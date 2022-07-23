@@ -1,3 +1,9 @@
+"""
+models.py
+====================================
+Defines Models as Data Structures of the System
+"""
+
 import json
 from typing import Dict, List
 from neo4j import Record

@@ -1,3 +1,9 @@
+"""
+competency_extractor.py
+====================================
+Contains different Implementations of Competency Extractors
+"""
+
 from typing import List
 from app.models import Competency
 from app.store import Store, StoreLocal

@@ -1,3 +1,9 @@
+"""
+routes.py
+====================================
+Defines the available Routes and API
+"""
+
 from flask import Blueprint, Response, request, json, jsonify
 from app.db import (
     CourseAlreadyExists,
