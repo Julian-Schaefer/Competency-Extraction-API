@@ -173,7 +173,7 @@ var spec = {
           {
             "in": "query",
             "name": "search",
-            "description": "Filter courses based on a search text (optional)",
+            "description": "Filter competencies based on a search text (optional)",
             "required": false,
             "schema": {
               "type": "string"
