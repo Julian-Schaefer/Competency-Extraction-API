@@ -1,3 +1,10 @@
+"""
+__init__.py
+====================================
+Defines the "app" Module and serves as an Entry Point to the Flask Application.
+Furthermore, the Swagger API Documentation gets set up as well as the API Routes.
+"""
+
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
 from app.routes import routes

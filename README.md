@@ -43,6 +43,14 @@ MODEL_FILES=./data/MLmodel
 
 You can find the documentation of our API at `http://localhost:5000/api/docs` once you have the system up and running.
 
+## Generate HTML Documentation of the Project
+
+1. `pipenv install` to install required dependencies
+2. `pipenv run make html` to generate HTML documentation based on the current Source Code
+
+You will find the generated HTML Documentation afterwards in the `build/html` Folder. Just drag and drop the `index.html` File 
+into a Browser to start browsing the Documentation.
+
 ## Preprocessing
 
 To use the preprocessing pipeline use the following code:

@@ -1,7 +1,7 @@
 """
 models.py
 ====================================
-Defines Models as Data Structures of the System
+Defines models as the required data structures of the system.
 """
 
 import json

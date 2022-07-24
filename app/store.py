@@ -1,7 +1,7 @@
 """
 store.py
 ====================================
-Allows Initialization of Competencies and provides termStore and sequenceStore
+Allows Initialization of the Database with Competencies and provides the termStore as well as the sequenceStore.
 """
 
 import os

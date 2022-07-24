@@ -1,7 +1,7 @@
 """
 db.py
 ====================================
-Everything related to interaction with the Graph Database
+Everything related to interacting with the Neo4J Graph Database.
 """
 
 from typing import List

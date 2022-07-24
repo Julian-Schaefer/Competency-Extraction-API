@@ -1,7 +1,7 @@
 """
 competency_extractor.py
 ====================================
-Contains different Implementations of Competency Extractors
+Defines the generic interface of a Competency Extractor and also contains different implementations of Competency Extractors.
 """
 
 from typing import List

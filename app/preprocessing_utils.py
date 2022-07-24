@@ -1,7 +1,7 @@
 """
 preprocessing_utils.py
 ====================================
-Classes and Functions to preprocess texts
+Contains utilities for preprocessing text.
 """
 
 import string
