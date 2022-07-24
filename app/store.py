@@ -1,9 +1,10 @@
 """
 store.py
 ====================================
-Allows Initialization of Competencies and provides termStore and sequenceStore
+Allows Initialization of the Database with Competencies and provides the termStore as well as the sequenceStore.
 """
 
+from typing import Union
 import os
 from app.db import GraphDatabaseConnection
 import pandas
@@ -13,19 +14,34 @@ from typing import List
 
 
 class StoreAlreadyInitialized(Exception):
-    """Raised when the Store has already been initialized"""
+    """Raised when the Store has already been initialized."""
 
     pass
 
 
 class Store:
+    """
+    The Store class provides the functionality to initialize the Graph Database with EU-ESCO competencies.
+    Furthermore, it also acts as the termStore and as the sequenceStore which are used by
+    the :class:`app.competency_extractor.PaperCompetencyExtractor` class.
+
+    :param language: Language to use (defaults to German)
+    :type language: str
+    :ivar preprocessor: An instance of the :class:`app.preprocessing_utils.PreprocessorGerman` class to preprocess the labels of Competencies
+    :type preprocessor: PreprocessorGerman
+    """
+
     def __init__(self, language="de"):
         self.db = GraphDatabaseConnection()
 
         if language == "de":
-            self.lemmatizer = PreprocessorGerman()
+            self.preprocessor = PreprocessorGerman()
 
     def initialize(self):
+        """
+        Initializes the Database with Competencies imported from a EU-ESCO compatible .csv File.
+        The Location of the .csv file has to be specified using the environment variable "DATA_FILE"
+        """
         existing_competencies = self.db.retrieve_all_competencies()
         if existing_competencies and len(existing_competencies) > 0:
             raise StoreAlreadyInitialized()
@@ -35,7 +51,7 @@ class Store:
 
         competencies = []
 
-        skills = self.lemmatizer.get_skills_from_file_as_json(
+        skills = self.preprocessor.get_skills_from_file_as_json(
             os.environ.get("DATA_FILE")
         )
 
@@ -76,11 +92,31 @@ class Store:
 
         self.db.create_competencies(competencies)
 
-    def check_term(self, term):
+    def check_term(self, term: str) -> bool:
+        """
+        Check if a term is contained in the term store.
+
+        :param term: A single term
+        :type term: str
+        :return: True if the term is contained in the term store and False if not
+        :rtype: bool
+        """
         is_found = self.db.find_label_by_term(term)
         return is_found
 
-    def check_sequence(self, sequence):
+    def check_sequence(
+        self, sequence: Union[str, List[str]]
+    ) -> List[Competency]:
+        """
+        Check if a sequence of words is contained in the sequence store and return all competencies with a label that matches
+        the sequence.
+
+        :param sequence: A sequence of words as a list of string tokens or as string
+        :type sequence: Union[str, List[str]]
+
+        :return: A list of all competencies contained in the sequence store, whose labels match the given sequence.
+        :rtype: List[Competency]
+        """
         if len(sequence) == 0:
             return []
 
@@ -97,10 +133,10 @@ class StoreLocal:
     """
     The StoreLocal class provides the same functionality as the Store class. The only difference is that the StoreLocal
     class can be used locally without having to start the server and without having to connect to the Database.
-    :param prc: A instance of the PreprocessorGerman class
-    :type prc: PreprocessorGerman
-    :param store_df: A DataFrame representation of the all_skill_labels.csv which contains all preferred and alternative
-    labels that are contained in the EU ESCO API.
+
+    :ivar preprocessor: An instance of the :class:`app.preprocessing_utils.PreprocessorGerman` class to preprocess the labels of Competencies
+    :type preprocessor: PreprocessorGerman
+    :ivar store_df: A DataFrame representation of a .csv file (located by the Environment Variable "LABELED_COMPETENCIES_FILE") which contains all preferred and alternative labels that are contained in the EU ESCO API.
     :type store_df: DataFrame
     """
 
@@ -108,15 +144,16 @@ class StoreLocal:
         """
         Constructor method
         """
-        self.prc = PreprocessorGerman()
+        self.preprocessor = PreprocessorGerman()
         self.store_df = pandas.read_csv(
-            r"C:\Users\amirm\OneDrive\Desktop\Python Projects\AWT-Project\app\all_skill_labels.csv",
+            os.environ.get("LABELED_COMPETENCIES_FILE"),
             index_col=0,
         )  # change later
 
     def check_term(self, term: str) -> bool:
         """
         Check if a term is contained in the term store.
+
         :param term: A single term
         :type term: str
         :return: True if the term is contained in the term store and False if not
@@ -131,8 +168,10 @@ class StoreLocal:
         """
         Check if a sequence is contained in the sequence store and return all competencies with a label that matches
         the sequence.
-        :param sequence: A sequence of words as a list of tokens
+
+        :param sequence: A sequence of words as a list of string tokens
         :type sequence: List[str]
+
         :return: A list of all competencies contained in the sequence store, whose labels match the given sequence.
         :rtype: List[str]
         """

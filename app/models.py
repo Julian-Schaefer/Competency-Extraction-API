@@ -1,26 +1,30 @@
 """
 models.py
 ====================================
-Defines Models as Data Structures of the System
+Defines models as the essential data structures for the domain of the system.
 """
 
-import json
 from typing import Dict, List
 from neo4j import Record
 
 
 class Label:
+    """
+    Defines the data structure for storing and working with Labels of Competencies.
+    Labels are always associated with Competencies.
+    """
+
     def __init__(self, text: str, type: str):
         self.text = text
         self.type = type
 
-    def toJSON(self):
-        return json.dumps(
-            self, default=lambda o: o.__dict__, sort_keys=True, indent=4
-        )
-
 
 class Competency:
+    """
+    Defines the data structure for storing and working with Competencies.
+    Includes all fields defined by the EU-ESCO standard.
+    """
+
     def __init__(
         self,
         skillType: str,
@@ -37,7 +41,7 @@ class Competency:
         inScheme: str,
         description: str,
         id: int = -1,
-        labels: Label = None,
+        labels: List[Label] = None,
     ):
         self.id = id
         self.skillType = skillType
@@ -57,6 +61,15 @@ class Competency:
 
     @staticmethod
     def fromDatabaseRecord(record: Record):
+        """
+        Initializes a new instance of a Competency using a Neo4J Database Record.
+
+        :param record: A Neo4J Database Record
+        :type record: neo4j.Record
+
+        :return: A new instance of a Competency
+        :rtype: Competency
+        """
         competency = Competency(
             id=record["competency"].id,
             skillType=record["competency"]._properties.get("skillType"),
@@ -79,6 +92,12 @@ class Competency:
         return competency
 
     def toJSON(self) -> Dict:
+        """
+        Serializes an existing instance of a Competency into JSON format.
+
+        :return: A Competency serialized as JSON
+        :rtype: Dict
+        """
         return {
             "id": self.id,
             "skillType": self.skillType,
@@ -98,12 +117,19 @@ class Competency:
 
 
 class Course:
+    """
+    Defines the data structure for storing and working with Courses.
+    A Course only conists of a description, an id and the type of Competency Extractor that has been used to extract
+    Competencies from the description.
+    Optionally Courses can be related to multiple Competencies.
+    """
+
     def __init__(
         self,
         id: int,
         description: str,
         extractor: str,
-        competencies: List[Dict] = [],
+        competencies: List[Competency] = [],
     ):
         self.id = id
         self.description = description
@@ -112,6 +138,15 @@ class Course:
 
     @staticmethod
     def fromDatabaseRecord(record: Record):
+        """
+        Initializes a new instance of a Course using a Neo4J Database Record.
+
+        :param record: A Neo4J Database Record
+        :type record: neo4j.Record
+
+        :return: A new instance of a Course
+        :rtype: Course
+        """
         course = Course(
             id=record["course"].id,
             description=record["course"]._properties["description"],
@@ -121,18 +156,19 @@ class Course:
         return course
 
     def toJSON(self) -> Dict:
-        if self.competencies:
-            competencies_json = [
-                competency.toJSON() for competency in self.competencies
-            ]
-            return {
-                "id": self.id,
-                "description": self.description,
-                "extractor": self.extractor,
-                "competencies": competencies_json,
-            }
+        """
+        Serializes an existing instance of a Course into JSON format.
+
+        :return: A Course serialized as JSON
+        :rtype: Dict
+        """
+        competencies_json = [
+            competency.toJSON() for competency in self.competencies
+        ]
+
         return {
             "id": self.id,
             "description": self.description,
             "extractor": self.extractor,
+            "competencies": competencies_json,
         }

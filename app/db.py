@@ -1,7 +1,7 @@
 """
 db.py
 ====================================
-Everything related to interaction with the Graph Database
+Everything related to interacting with the Neo4J Graph Database.
 """
 
 from typing import List
@@ -305,12 +305,12 @@ class GraphDatabaseConnection:
         ]
         return competencies
 
-    def find_label_by_term(self, term) -> bool:
+    def find_label_by_term(self, term: str) -> bool:
         """Retrieves all labels containing this term and returns true, if there
         is more than 1 label containing that term. Returns false otherwise.
 
         :param term: a single term
-        :type term: String
+        :type term: str
 
         :raises RetrievingLabelFailed: if communication with the database goes wrong
 
@@ -324,7 +324,7 @@ class GraphDatabaseConnection:
             return is_found
 
     @staticmethod
-    def _find_label_by_term(tx, term) -> bool:
+    def _find_label_by_term(tx, term: str) -> bool:
         query = "MATCH (lab:Label) where lab.text CONTAINS $term RETURN lab AS label"
 
         try:
@@ -339,12 +339,12 @@ class GraphDatabaseConnection:
         except Exception as e:
             raise RetrievingLabelFailed(f"{query} raised an error: \n {e}")
 
-    def find_competency_by_sequence(self, sequence) -> List[Competency]:
+    def find_competency_by_sequence(self, sequence: str) -> List[Competency]:
         """Find all competencies by matching their labels to the complete sequence that
         has been provided.
 
         :param sequence: sequence of words
-        :type sequence: String
+        :type sequence: str
 
         :raises RetrievingCompetencyFailed: if communication with the database goes wrong
 

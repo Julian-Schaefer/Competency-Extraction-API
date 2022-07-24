@@ -5,6 +5,7 @@ Welcome to AWT-Project's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   __init__
    db
    models
    store

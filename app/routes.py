@@ -1,7 +1,7 @@
 """
 routes.py
 ====================================
-Defines the available Routes and API
+Defines the available Routes of the RESTful API.
 """
 
 from flask import Blueprint, Response, request, json, jsonify
