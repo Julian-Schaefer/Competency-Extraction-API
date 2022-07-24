@@ -4,7 +4,7 @@ competency_extractor.py
 Defines the generic interface of a Competency Extractor and also contains different implementations of Competency Extractors.
 """
 
-from typing import List
+from typing import List, Tuple
 from app.models import Competency
 from app.store import Store, StoreLocal
 import pandas as pd
@@ -13,30 +13,35 @@ import os
 
 
 class CompetencyExtractorInterface:
-    """Interface for Competency Extractors"""
+    """Defines the basic Interface for Competency Extractors"""
 
     def extract_competencies(
         self, course_descriptions: List[str]
     ) -> List[List[Competency]]:
-        """Extract competencies from course_descriptions."""
+        """Extract competencies from Course Descriptions.
+
+        :param course_descriptions: A List of Course Descriptions
+        :type course_descriptions: List[str]
+
+        :return: For each course description a list of competencies that have been extracted.
+        :rtype: List[List[Competency]]
+        """
         pass
 
 
-class DummyExtractor(CompetencyExtractorInterface):
-    """Dummy extractor for testing."""
+class DummyCompetencyExtractor(CompetencyExtractorInterface):
+    """A First Dummy Competency Extractor used only for testing and initial setup."""
 
     def extract_competencies(
         self, course_descriptions: List[str]
     ) -> List[List[Competency]]:
-        """Extract competencies
+        """Extract competencies from Course Descriptions.
 
-        Extract competencies from course_description returning every word.
+        :param course_descriptions: A List of Course Descriptions
+        :type course_descriptions: List[str]
 
-        Parameters:
-            course_description: course body as string
-
-        Returns:
-            List of competencies as dict
+        :return: For each course description a list of competencies that have been extracted.
+        :rtype: List[List[Competency]]
         """
         return [
             Competency(
@@ -48,18 +53,40 @@ class DummyExtractor(CompetencyExtractorInterface):
 
 
 class PaperCompetencyExtractor(CompetencyExtractorInterface):
+    """
+    This Competency Extractor implements the approach/algorithm presented by the paper
+    "Ontology-based Entity Recognition and Annotation" (available at http://ceur-ws.org/Vol-2535/paper_4.pdf).
+    It is used as the reference implementation that can be used to compare results to
+    other implementations of Competency Extractors.
+
+    :ivar store: An Instance of a Store to check labels and sequences
+    :type store: Store
+    :ivar preprocessor: An instance of the :class:`app.preprocessing_utils.PreprocessorGerman` class to preprocess the labels of Competencies
+    :type preprocessor: PreprocessorGerman
+    """
+
     def __init__(self):
         self.store = Store()
-        self.lemmatizer = self.store.lemmatizer
+        self.preprocessor = self.store.preprocessor
 
     def extract_competencies(
         self, course_descriptions: List[str]
     ) -> List[List[Competency]]:
-        tokenized_texts = self.lemmatizer.preprocess_texts(course_descriptions)
+        """Extract competencies from Course Descriptions.
+
+        :param course_descriptions: A List of Course Descriptions
+        :type course_descriptions: List[str]
+
+        :return: For each course description a list of competencies that have been extracted.
+        :rtype: List[List[Competency]]
+        """
+        tokenized_texts = self.preprocessor.preprocess_texts(
+            course_descriptions
+        )
 
         tokenized_texts_series = pd.Series(tokenized_texts, name="form")
         competencies = tokenized_texts_series.map(
-            lambda tokenized_text: self.get_competencies_from_tokenized_text(
+            lambda tokenized_text: self._get_competencies_from_tokenized_text(
                 tokenized_text
             )
         )
@@ -67,7 +94,12 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
         competencies = competencies.tolist()
         return competencies
 
-    def get_competencies_from_tokenized_text(self, tokenized_text):
+    def _get_competencies_from_tokenized_text(
+        self, tokenized_text: List[str]
+    ) -> List[Competency]:
+        """
+        Implementation of the "annotate" function defined by the Paper Algorithm.
+        """
         at = ""
         all_competencies = []
         p = 0
@@ -77,7 +109,7 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
             if not self.store.check_term(token):
                 at = at + " " + token
             else:
-                (phrase, _) = self.lookahead(tokenized_text[(p):], [token], 1)
+                (phrase, _) = self._lookahead(tokenized_text[p:], [token], 1)
                 if len(phrase) > 0:
                     competencies = self.store.check_sequence(phrase)
                     if len(competencies) > 0:
@@ -89,7 +121,12 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
 
         return all_competencies
 
-    def lookahead(self, tokenized_text, fp, n):
+    def _lookahead(
+        self, tokenized_text: List[str], fp: List[str], n: int
+    ) -> Tuple[List[str], int]:
+        """
+        Implementation of the "lookahead" function defined by the Paper Algorithm.
+        """
         if len(tokenized_text) == 0:
             return (fp, n)
 
@@ -99,7 +136,7 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
         if termfound or phraseFound:
             new_fp = fp[:]
             new_fp.append(tokenized_text[0])
-            (ph, l) = self.lookahead(tokenized_text[1:], new_fp, n + 1)
+            (ph, l) = self._lookahead(tokenized_text[1:], new_fp, n + 1)
             if len(self.store.check_sequence(ph)) > 0:
                 return (ph, l)
             elif phraseFound:
@@ -108,84 +145,58 @@ class PaperCompetencyExtractor(CompetencyExtractorInterface):
         return ([], n)
 
 
-class CompetencyExtractorPaperLocal(CompetencyExtractorInterface):
+class PaperCompetencyExtractorLocal(PaperCompetencyExtractor):
     """
     This class contains the same functionality as the PaperCompetencyExtractor class. The only difference is that this
     class can be used to extract competencies from course descriptions locally, without having to start the server.
     Extracting competencies through this class however does not upload the courses and extracted competencies to the
-    Database. The only purpose of this class is to extract competencies en masse in order to evaluate the results and
+    Database. The only purpose of this class is to extract competencies in big batches in order to evaluate the results and
     compare them to the results of other extractors.
+
+    :ivar store: An Instance of a local Store to check labels and sequences
+    :type store: StoreLocal
+    :ivar preprocessor: An instance of the :class:`app.preprocessing_utils.PreprocessorGerman` class to preprocess the labels of Competencies
+    :type preprocessor: PreprocessorGerman
     """
 
     def __init__(self):
         self.store = StoreLocal()
-
-    def extract_competencies(
-        self, course_descriptions: List[str]
-    ) -> List[List[Competency]]:
-        tokenized_texts = self.store.prc.preprocess_texts(course_descriptions)
-
-        competencies = []
-        for i, text in enumerate(tokenized_texts):
-            leng = len(tokenized_texts)
-            print(i + 1, " / ", leng)
-            competencies.append(
-                self.get_competencies_from_tokenized_text(text)
-            )
-        return competencies
-
-    def get_competencies_from_tokenized_text(self, tokenized_text):
-        at = ""
-        all_competencies = []
-        p = 0
-
-        for token in tokenized_text:
-            p = p + 1
-            if not self.store.check_term(token):
-                at = at + " " + token
-            else:
-                (phrase, _) = self.lookahead(tokenized_text[(p):], [token], 1)
-                if len(phrase) > 0:
-                    competencies = self.store.check_sequence(phrase)
-                    if len(competencies) > 0:
-                        all_competencies += competencies
-                        at = at + " " + " ".join(phrase)
-                        continue
-
-                at = at + " " + token
-
-        return all_competencies
-
-    def lookahead(self, tokenized_text, fp, n):
-        if len(tokenized_text) == 0:
-            return (fp, n)
-
-        termfound = self.store.check_term(tokenized_text[0])
-        phraseFound = len(self.store.check_sequence(fp)) > 0
-
-        if termfound or phraseFound:
-            new_fp = fp[:]
-            new_fp.append(tokenized_text[0])
-            (ph, l) = self.lookahead(tokenized_text[1:], new_fp, n + 1)
-            if len(self.store.check_sequence(ph)) > 0:
-                return (ph, l)
-            elif phraseFound:
-                return (fp, n)
-
-        return ([], n)
+        self.preprocessor = self.store.preprocessor
 
 
 class MLCompetencyExtractor(CompetencyExtractorInterface):
+    """
+    This Competency Extractor uses a Machine Learning Model that has been trained on a Dataset which was generated using
+    the reference Competency Extractor, namely :class:`app.competency_extractor.PaperCompetencyExtractor`.
+
+    :ivar store: An Instance of a Store which provides the Preprocessor
+    :type store: Store
+    :ivar preprocessor: An instance of the :class:`app.preprocessing_utils.PreprocessorGerman` class to preprocess the labels of Competencies
+    :type preprocessor: PreprocessorGerman
+    :ivar nlp: An instance of a spaCy model, which is loaded from the location of the "MODEL_FILES" environment variable
+    :type nlp: spacy.Language
+    """
+
     def __init__(self):
         self.store = Store()
-        self.lemmatizer = self.store.lemmatizer
+        self.preprocessor = self.store.preprocessor
         self.nlp = spacy.load(os.environ.get("MODEL_FILES"))
 
     def extract_competencies(
         self, course_descriptions: List[str]
     ) -> List[List[Competency]]:
-        tokenized_texts = self.lemmatizer.preprocess_texts(course_descriptions)
-        texts = self.lemmatizer.join_tokenized_texts(tokenized_texts)
+        """Extract competencies from Course Descriptions.
+
+        :param course_descriptions: A List of Course Descriptions
+        :type course_descriptions: List[str]
+
+        :return: For each course description a list of competencies that have been extracted.
+        :rtype: List[List[Competency]]
+        """
+        tokenized_texts = self.preprocessor.preprocess_texts(
+            course_descriptions
+        )
+        texts = self.preprocessor.join_tokenized_texts(tokenized_texts)
         all_competencies = []
 
         for text in texts:
