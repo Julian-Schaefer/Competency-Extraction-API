@@ -45,9 +45,13 @@ ML_DIR=./ML/
 2. `match (a) delete a` to clean up nodes
 
 ### Train Machine Learning Competency Extractor
-1. `pipenv run python app/machine_learning.py`
-2. `cd ML`
-3. `pipenv run python -m spacy train config.cfg --output ./output`
+Use the following commands to reproduce the Machine Learning model used in the Machine Learning based 
+Competency Extractor:
+
+1. `pipenv run python app/machine_learning.py`  this creates the spacy files for training and testing the model
+2. `cd ML`  navigate the console to the "ML" directory
+3. `pipenv run python -m spacy train config.cfg --output ./output` train and test the model with the created 
+spacy files
 
 ## Documentation of API
 
