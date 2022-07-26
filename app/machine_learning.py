@@ -1,3 +1,5 @@
+import os
+from typing import List
 import pandas as pd
 import re
 import ast
@@ -5,13 +7,10 @@ import spacy
 from spacy.tokens import DocBin
 
 
-def create_spacy_file_from_df(df, train_or_test: str) -> None:
-    course_descrs = df["course_descr_long_preprocessed"].tolist()
-    comps = df["competencies"].tolist()
-
+def __create_spacy_file__(course_descriptions: List[str], competencies: List[List[str]], train_or_test: str) -> None:
     data = []
-    for i, course_descr in enumerate(course_descrs):
-        comp = ast.literal_eval(comps[i])
+    for i, course_descr in enumerate(course_descriptions):
+        comp = competencies[i]
         comp = pd.unique(comp).tolist()
         # check if course has competencies
         if len(comp) != 0:
@@ -60,14 +59,22 @@ def create_spacy_file_from_df(df, train_or_test: str) -> None:
             ents.append(span)
         doc.ents = ents
         db.add(doc)
-    db.to_disk("./" + train_or_test + ".spacy")
+    db.to_disk(os.environ.get("ML_DIR") + train_or_test + ".spacy")
 
 
-def main():
+def create_train_and_test_spacy_files(frac=0.8) -> None:
+    """
+    Creates spacy training and testing files for training a NER model.
+    The data used to make the files comes from the courses_preprocessed.csv which contains the competencies that the
+    Reference Implementation extracted from the course descriptions provided by
+    the Weiterbildungsdatenbank Berlin Brandenburg.
+    The files are saved in the in the sub directory "ML".
+    :param frac: The fraction of training data.
+    :type frac: int
+    """
     # load course DataFrame and delete rows with no preprocessed course description
     courses_df = pd.read_csv(
-        r"C:\Users\amirm\OneDrive\Desktop\Python "
-        r"Projects\AWT-Project\data\courses_preprocessed.csv",
+        os.environ.get("COURSES_FILE"),
         sep="|",
         encoding="utf-8",
         index_col=0,
@@ -75,10 +82,17 @@ def main():
     courses_df = courses_df[
         ~courses_df["course_descr_long_preprocessed"].isna()
     ]
+    courses_df["competencies"] = courses_df["competencies"].map(ast.literal_eval)
     # split DataFrame into training and testing
-    training_data_df = courses_df.sample(frac=0.8, random_state=25)
+    training_data_df = courses_df.sample(frac=frac, random_state=25)
     testing_data_df = courses_df.drop(training_data_df.index)
-    print(training_data_df)
     # create spacy files for training and testing
-    create_spacy_file_from_df(training_data_df, "train")
-    create_spacy_file_from_df(testing_data_df, "test")
+    __create_spacy_file__(training_data_df["course_descr_long_preprocessed"].tolist(),
+                              training_data_df["competencies"].tolist(),
+                              "train")
+    __create_spacy_file__(testing_data_df["course_descr_long_preprocessed"].tolist(),
+                              testing_data_df["competencies"].tolist(),
+                              "test")
+
+
+create_train_and_test_spacy_files()

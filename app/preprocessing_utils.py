@@ -1,9 +1,3 @@
-"""
-preprocessing_utils.py
-====================================
-Contains utilities for preprocessing text.
-"""
-
 import string
 import pandas as pd
 import nltk
@@ -13,13 +7,13 @@ import numpy as np
 from itertools import groupby, zip_longest
 import json
 
-__data_path__ = os.path.join(os.path.dirname(__file__), "./lemma_cache_data")
-
 
 def add_nltk_data_path():
-    """Adds the directory ".\app\nltk_data" to the list of paths that the nltk library searches in for valid nltk models."""
-    if not __data_path__ + "/nltk_data" in nltk.data.path:
-        nltk.data.path.append(__data_path__ + "/nltk_data")
+    """
+    Adds the directory ".\app\nltk_data" to the list of paths that the nltk library searches in for valid nltk models.
+    """
+    if not os.environ.get("NLTK_FILES") in nltk.data.path:
+        nltk.data.path.append(os.environ.get("NLTK_FILES"))
 
 
 def split_list_by_dot(list_with_dot: List[str]) -> List[List[str]]:
@@ -45,11 +39,11 @@ class PreprocessorGerman:
     def __init__(self):
         add_nltk_data_path()
         self.morphys = pd.read_csv(
-            __data_path__ + "/morphys.csv", encoding="utf-8", index_col=0
+            os.environ.get("MORPHYS_FILE"), encoding="utf-8", index_col=0
         )[["form", "lemma"]]
         self.language = "german"
         with open(
-            __data_path__ + "/stopwords-de.txt", "r", encoding="utf-8"
+            os.environ.get("STOPWORDS_FILE"), "r", encoding="utf-8"
         ) as f:
             self.stopwords = list(map(str.strip, list(f)))
 
@@ -202,7 +196,6 @@ class PreprocessorGerman:
 
         # tokenize
         processed_texts = self.tokenize(processed_texts)
-
         # remove punctuation
         processed_texts = self.remove_punctuation(processed_texts)
 
@@ -211,16 +204,13 @@ class PreprocessorGerman:
 
         # remove stopwords
         processed_texts = self.remove_stopwords(processed_texts)
-
         # lemmatize
         processed_texts = self.lemmatize_morphys_fast(processed_texts)
-
         # lowercase
         processed_texts = self.lowercase(processed_texts)
-
         return processed_texts.map(pd.Series.tolist).tolist()
 
-    def get_skills_from_file_as_json(self, file) -> str:
+    def get_skills_from_file_as_json(self) -> str:
         """
         Reads the "skills_de.csv" into a json string and preprocesses the labels of each skill.
         The resulting json string contains a dictionary. The keys are the concept-URIs. Each key has 5 fields:
@@ -239,7 +229,7 @@ class PreprocessorGerman:
         :rtype: str
         """
         # import skills csv as DataFrame
-        df = pd.read_csv(file, encoding="utf-8")[
+        df = pd.read_csv(os.environ.get("DATA_FILE"), encoding="utf-8")[
             [
                 "skillType",
                 "conceptUri",
@@ -256,7 +246,6 @@ class PreprocessorGerman:
                 "description",
             ]
         ]
-
         # Replace new line characters in the altLabels columns with dots
         df["altLabels"] = df["altLabels"].map(
             lambda x: x.replace("\n", ". ") if type(x) == str else x

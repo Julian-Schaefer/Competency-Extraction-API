@@ -26,7 +26,12 @@ Use the following commands for development (in the root folder):
 ```
 DB_URI=bolt://localhost:7687
 DATA_FILE=./data/skills_de.csv
+COURSES_FILE=./data/courses_preprocessed.csv
 MODEL_FILES=./data/MLmodel
+NLTK_FILES=./data/lemma_cache_data/nltk_data
+MORPHYS_FILE=./data/lemma_cache_data/morphys.csv
+STOPWORDS_FILE=./data/lemma_cache_data/stopwords-de.txt
+ML_DIR=./ML/
 ```
 
 3. `docker-compose up db` to only start Neo4J Database
@@ -38,6 +43,11 @@ MODEL_FILES=./data/MLmodel
 
 1. `match (a) -[r] -> () delete a, r` to clean up relations
 2. `match (a) delete a` to clean up nodes
+
+### Train Machine Learning Competency Extractor
+1. `pipenv run python app/machine_learning.py`
+2. `cd ML`
+3. `pipenv run python -m spacy train config.cfg --output ./output`
 
 ## Documentation of API
 
