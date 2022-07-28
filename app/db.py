@@ -163,9 +163,9 @@ class GraphDatabaseConnection:
         """Insert Course with its description and associated competencies
 
         :param course_description: description of course
-        :type course_description: String
+        :type course_description: str
         :param extractor: extractor used e.g. paper or ml
-        :type extractor: String
+        :type extractor: str
         :param associated_competencies: associated competencies for this course description
         :type associated_competencies: List[Competency]
 
@@ -395,7 +395,7 @@ class GraphDatabaseConnection:
         """Find courses by matching their competency provided by it's ID.
 
         :param competency_id: id of the competency
-        :type competency_id: Integer
+        :type competency_id: int
 
         :raises RetrievingCourseFailed: if communication with the database goes wrong
 
@@ -431,7 +431,7 @@ class GraphDatabaseConnection:
         """Find courses by text query.
 
         :param text_search_query: text query
-        :type text_search_query: String
+        :type text_search_query: str
 
         :raises RetrievingCourseFailed: if communication with the database goes wrong
 
@@ -485,7 +485,7 @@ class GraphDatabaseConnection:
         """Find all competencies by text query
 
         :param text_search_query: sequence of words
-        :type text_search_query: String
+        :type text_search_query: str
 
         :raises RetrievingCompetencyFailed: if communication with the database goes wrong
 
@@ -522,7 +522,7 @@ class GraphDatabaseConnection:
         """Find competencies by matching the course that they are connected to provided by it's ID.
 
         :param course_id: id of the course
-        :type course_id: Integer
+        :type course_id: int
 
         :raise RetrievingCompetencyFailed: if communication with the database goes wrong
 

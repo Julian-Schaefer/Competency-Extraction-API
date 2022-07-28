@@ -25,11 +25,21 @@ routes = Blueprint("routes", __name__)
 
 @routes.route("/")
 def hello():
+    """Welcome endpoint
+
+    :returns: Welcome response
+    :rtype: str
+    """
     return "<h1>Welcome!</h1><p>Welcome to our API server, you can query courses and competencies here.</p>"
 
 
 @routes.route("/competencies/initialize", methods=["POST"])
 def initialize():
+    """Initialize endpoint
+
+    :returns: Initialize response
+    :rtype: str
+    """
     store = Store()
     try:
         store.initialize()
@@ -49,6 +59,11 @@ def _get_competency_extractor_from_string(name):
 
 @routes.route("/courses", methods=["POST"])
 def create_course():
+    """Create courses endpoint
+
+    :returns: Create courses response
+    :rtype: str
+    """
     extractor = request.args.get("extractor")
     if not extractor:
         extractor = "paper"
@@ -139,6 +154,11 @@ def create_course():
 
 @routes.route("/courses", methods=["GET"])
 def retrieve_course():
+    """Retrieve courses endpoint
+
+    :returns: Retrieve courses response
+    :rtype: str
+    """
     competency_id = request.args.get("competencyId")
     text_search_query = request.args.get("search")
 
@@ -162,6 +182,11 @@ def retrieve_course():
 
 @routes.route("/competencies", methods=["GET"])
 def retrieve_competency():
+    """Retrieve competencies endpoint
+
+    :returns: Retrieve competencies response
+    :rtype: str
+    """
     course_id = request.args.get("courseId")
     text_search_query = request.args.get("search")
 
@@ -186,6 +211,11 @@ def retrieve_competency():
 
 @routes.route("/courses/export", methods=["POST"])
 def export_courses():
+    """Export endpoint
+
+    :returns: Export response
+    :rtype: str
+    """
 
     file_path = "data/exported_courses.json"
 
