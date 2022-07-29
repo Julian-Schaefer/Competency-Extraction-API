@@ -12,6 +12,7 @@ Welcome to AWT-Project's documentation!
    routes
    competency_extractor
    preprocessing_utils
+   machine_learning
 
 Indices and tables
 ==================
