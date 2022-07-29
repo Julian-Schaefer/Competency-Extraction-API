@@ -46,14 +46,9 @@ class Store:
         if existing_competencies and len(existing_competencies) > 0:
             raise StoreAlreadyInitialized()
 
-        data_file = pandas.read_csv(os.environ.get("DATA_FILE"))
-        data_file["altLabels"] = data_file["altLabels"].astype("string")
-
         competencies = []
 
-        skills = self.preprocessor.get_skills_from_file_as_json(
-            os.environ.get("DATA_FILE")
-        )
+        skills = self.preprocessor.get_skills_from_file_as_json()
 
         for uri, skill in skills.items():
             labels = [

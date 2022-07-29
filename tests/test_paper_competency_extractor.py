@@ -6,10 +6,10 @@ from app.competency_extractor import (
 def test_annotize():
     competencyExtractor = PaperCompetencyExtractor()
     competencies = competencyExtractor.extract_competencies(
-        "Musikpersonal verwalten ist ein anstrengender Skill. Es ist aber sehr hilfreich."
+        "Musikpersonal verwalten ist ein anstrengender Skill. Er ist aber sehr hilfreich."
     )
 
-    assert len(competencies) == 1
+    assert len(competencies[0]) == 2
 
 
 def test_annotize2():
@@ -32,4 +32,4 @@ def test_annotize2():
     competencyExtractor = PaperCompetencyExtractor()
     competencies = competencyExtractor.extract_competencies(course_description)
 
-    assert len(competencies) == 3
+    assert len(competencies[0]) == 3

@@ -9,7 +9,7 @@ def test_annotize():
         "Musikpersonal verwalten ist ein anstrengender Skill. Es ist aber sehr hilfreich."
     )
 
-    assert len(competencies) == 1
+    assert len(competencies[0]) == 1
 
 
 def test_annotize2():
@@ -32,4 +32,4 @@ def test_annotize2():
     competencyExtractor = MLCompetencyExtractor()
     competencies = competencyExtractor.extract_competencies(course_description)
 
-    assert len(competencies) == 1
+    assert len(competencies[0]) == 3

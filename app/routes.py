@@ -27,7 +27,7 @@ routes = Blueprint("routes", __name__)
 def hello():
     """Welcome endpoint
 
-    :returns: Welcome response
+    :returns: Welcome response as HTML
     :rtype: str
     """
     return "<h1>Welcome!</h1><p>Welcome to our API server, you can query courses and competencies here.</p>"
@@ -37,7 +37,7 @@ def hello():
 def initialize():
     """Initialize endpoint
 
-    :returns: Initialize response
+    :returns: Initialization result
     :rtype: str
     """
     store = Store()
@@ -61,8 +61,8 @@ def _get_competency_extractor_from_string(name):
 def create_course():
     """Create courses endpoint
 
-    :returns: Create courses response
-    :rtype: str
+    :returns: Created Course response as JSON (or string if using XML Import)
+    :rtype: Union[flask.Response, str]
     """
     extractor = request.args.get("extractor")
     if not extractor:
@@ -153,11 +153,11 @@ def create_course():
 
 
 @routes.route("/courses", methods=["GET"])
-def retrieve_course():
+def retrieve_courses():
     """Retrieve courses endpoint
 
-    :returns: Retrieve courses response
-    :rtype: str
+    :returns: Retrieved courses response as JSON
+    :rtype: flask.Response
     """
     competency_id = request.args.get("competencyId")
     text_search_query = request.args.get("search")
@@ -181,11 +181,11 @@ def retrieve_course():
 
 
 @routes.route("/competencies", methods=["GET"])
-def retrieve_competency():
+def retrieve_competencies():
     """Retrieve competencies endpoint
 
-    :returns: Retrieve competencies response
-    :rtype: str
+    :returns: Retrieved competencies response as JSON
+    :rtype: flask.Response
     """
     course_id = request.args.get("courseId")
     text_search_query = request.args.get("search")

@@ -56,6 +56,7 @@ class GraphDatabaseConnection:
         self.driver = GraphDatabase.driver(db_uri, auth=("neo4j", "password"))
 
     def close(self):
+        """Closes the Database Connection"""
         self.driver.close()
 
     def create_competency(self, competency: Competency) -> None:
@@ -160,7 +161,7 @@ class GraphDatabaseConnection:
         extractor: str,
         associated_competencies: List[Competency],
     ) -> Course:
-        """Insert Course with its description and associated competencies
+        """Insert Course with its description and associated competencies using the specified competency extractor.
 
         :param course_description: description of course
         :type course_description: str
@@ -428,7 +429,8 @@ class GraphDatabaseConnection:
     def find_courses_by_text_query(
         self, text_search_query: str
     ) -> List[Course]:
-        """Find courses by text query.
+        """Find courses by text query. The query will be used for a full-text search on the course
+        descriptions, looking for exact matches of the query in the descriptions (e.g. search is case-sensitive).
 
         :param text_search_query: text query
         :type text_search_query: str
@@ -482,7 +484,10 @@ class GraphDatabaseConnection:
     def find_competencies_by_text_query(
         self, text_search_query: str
     ) -> List[Competency]:
-        """Find all competencies by text query
+        """Find all competencies by text query. The competencies will be retrieved either by
+        searching for an exact match in the competency description (case-sensitive in this case), or
+        by using the preprocessing pipeline to preprocess the text and then search for all labels that contain
+        the preprocessed search query and returning their associated competencies.
 
         :param text_search_query: sequence of words
         :type text_search_query: str

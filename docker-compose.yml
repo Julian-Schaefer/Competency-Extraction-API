@@ -21,7 +21,12 @@ services:
       - PORT=5000
       - DB_URI=bolt://db:7687
       - DATA_FILE=/data/skills_de.csv
+      - COURSES_FILE=./data/courses_preprocessed.csv
       - MODEL_FILES=./data/MLmodel
+      - NLTK_FILES=./data/lemma_cache_data/nltk_data
+      - MORPHYS_FILE=./data/lemma_cache_data/morphys.csv
+      - STOPWORDS_FILE=./data/lemma_cache_data/stopwords-de.txt
+      - ML_DIR=./ML/d
     ports:
       - '5000:5000'
     volumes:

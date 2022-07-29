@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath("../.."))
 # -- Project information -----------------------------------------------------
 
 project = "AWT-Project"
-copyright = "2022, Lu Kalkbrenner, Julian David Schäfer, Amir"
-author = "Lu Kalkbrenner, Julian David Schäfer, Amir"
+copyright = "2022, Lu Kalkbrenner, Julian David Schäfer, Amir Mohammad"
+author = "Lu Kalkbrenner, Julian David Schäfer, Amir Mohammad"
 
 
 # -- General configuration ---------------------------------------------------

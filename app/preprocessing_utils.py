@@ -1,3 +1,9 @@
+"""
+preprocessing_utils.py
+====================================
+Contains utilities for preprocessing text.
+"""
+
 import string
 import pandas as pd
 import nltk
@@ -9,9 +15,7 @@ import json
 
 
 def add_nltk_data_path():
-    """
-    Adds the directory ".\app\nltk_data" to the list of paths that the nltk library searches in for valid nltk models.
-    """
+    """Adds the directory ".\app\nltk_data" to the list of paths that the nltk library searches in for valid nltk models."""
     if not os.environ.get("NLTK_FILES") in nltk.data.path:
         nltk.data.path.append(os.environ.get("NLTK_FILES"))
 
@@ -19,6 +23,7 @@ def add_nltk_data_path():
 def split_list_by_dot(list_with_dot: List[str]) -> List[List[str]]:
     """
     Split a list into multiple lists based on elements that equal ".".
+
     :param list_with_dot: A List of string that contains dots
     :type list_with_dot: List[str]
     :return: A List of sublists
@@ -51,6 +56,7 @@ class PreprocessorGerman:
     def convert_to_series(texts: List[str]) -> pd.Series:
         """
         Convert a list of course descriptions into a Pandas Series. Also remove any newline characters.
+
         :param texts: A List of course descriptions
         :type texts: List[str]
         :return: The list of course descriptions as a Pandas Series with newline characters removed
@@ -61,6 +67,7 @@ class PreprocessorGerman:
     def tokenize(self, texts: pd.Series) -> pd.Series:
         """
         Tokenize a Series of course descriptions.
+
         :param texts: A Series of course descriptions
         :type texts: pd.Series[str]
         :return: A Series of tokenized course descriptions, where each description is a Series itself
@@ -80,6 +87,7 @@ class PreprocessorGerman:
         Remove punctuation from a series of tokenized course descriptions. If a token only consists of punctuation
         characters it is removed entirely, unless the token is just one dot. In that case the token is kept.
         Hyphens that do not appear at the start or end of a token are not removed.
+
         :param texts: A Series of tokenized course descriptions
         :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions with punctuation removed
@@ -102,6 +110,7 @@ class PreprocessorGerman:
     def remove_numeric_tokens(texts: pd.Series) -> pd.Series:
         """
         Remove numeric tokens from a Series of tokenized course descriptions.
+
         :param texts: A Series of tokenized course descriptions
         :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions with numeric tokens removed
@@ -112,6 +121,7 @@ class PreprocessorGerman:
     def remove_stopwords(self, texts: pd.Series) -> pd.Series:
         """
         Remove stopwords from a Series of tokenized course descriptions.
+
         :param texts: A Series of tokenized course descriptions
         :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions with stopwords removed
@@ -126,6 +136,7 @@ class PreprocessorGerman:
         into their compounds, then the lemma for each compound is searched in the table, and finally the lemmas of
         each compound are joined back together separated by hyphens.
         If a token does not appear in the lookup table, the token itself is used as the lemma.
+
         :param texts: A Series of tokenized course descriptions
         :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions where each token is lemmatized
@@ -170,6 +181,7 @@ class PreprocessorGerman:
     def lowercase(texts: pd.Series) -> pd.Series:
         """
         Lowercase a Series of tokenized course descriptions.
+
         :param texts: A Series of tokenized course descriptions
         :type texts: pd.Series[pd.Series[str]]
         :return: A Series of tokenized course descriptions with each token lowercased
@@ -186,6 +198,7 @@ class PreprocessorGerman:
         - remove stopwords
         - lemmatize using the morphys lemmatizer
         - lowercase each token
+
         :param texts: A list of texts
         :type texts: List[str]
         :return: The preprocessed texts
@@ -212,8 +225,9 @@ class PreprocessorGerman:
 
     def get_skills_from_file_as_json(self) -> str:
         """
-        Reads the "skills_de.csv" into a json string and preprocesses the labels of each skill.
-        The resulting json string contains a dictionary. The keys are the concept-URIs. Each key has 5 fields:
+        Reads a ".csv"-file containing competencies/skills in EU-ESCO compatible format into a json string and preprocesses
+        the labels of each skill. The location of this file has to be specified by setting the environment variable "DATA_FILE".
+        The resulting json string contains a dictionary. The keys are the concept-URIs. Each key has the following fields:
         - conceptUri: str
         - conceptType: str
         - KnowledgeSkillCompetence: str
@@ -222,11 +236,11 @@ class PreprocessorGerman:
         - preferredLabelPreprocessed: List[str]
         - altLabelsPreprocessed: List[List[str]]
 
-        The last two fields do not appear as columns in the "skills_de.csv" file. They are created within this method
+        The last two fields do not appear as columns in the provided ".csv"-file. They are created within this method
         using the preprocessing pipeline.
 
-        :return: json representation of the "skills_de.csv" file with added fields for the preprocessed labels
-        :rtype: str
+        :return: json representation of the specified ".csv" file (using "DATA_FILE" environment variable) with added fields for the preprocessed labels
+        :rtype: dict
         """
         # import skills csv as DataFrame
         df = pd.read_csv(os.environ.get("DATA_FILE"), encoding="utf-8")[
@@ -288,6 +302,7 @@ class PreprocessorGerman:
     def join_tokenized_texts(texts: List[List[str]]) -> List[str]:
         """
         Join tokenized texts into strings.
+
         :param texts: List of tokenized texts
         :type texts: List[List[str]]
         :return: List of non tokenized texts
