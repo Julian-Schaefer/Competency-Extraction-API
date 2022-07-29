@@ -162,13 +162,20 @@ class Course:
         :return: A Course serialized as JSON
         :rtype: Dict
         """
-        competencies_json = [
-            competency.toJSON() for competency in self.competencies
-        ]
+        if self.competencies:
+            competencies_json = [
+                competency.toJSON() for competency in self.competencies
+            ]
+
+            return {
+                "id": self.id,
+                "description": self.description,
+                "extractor": self.extractor,
+                "competencies": competencies_json,
+            }
 
         return {
             "id": self.id,
             "description": self.description,
             "extractor": self.extractor,
-            "competencies": competencies_json,
         }
