@@ -6,10 +6,10 @@ Allows Initialization of the Database with Competencies and provides the termSto
 
 from typing import Union
 import os
-from app.db import GraphDatabaseConnection
+from db import GraphDatabaseConnection
 import pandas
-from app.preprocessing_utils import PreprocessorGerman
-from app.models import Competency, Label
+from preprocessing_utils import PreprocessorGerman
+from models import Competency, Label
 from typing import List
 
 
@@ -143,7 +143,7 @@ class StoreLocal:
         self.store_df = pandas.read_csv(
             os.environ.get("LABELED_COMPETENCIES_FILE"),
             index_col=0,
-        )  # change later
+        )
 
     def check_term(self, term: str) -> bool:
         """

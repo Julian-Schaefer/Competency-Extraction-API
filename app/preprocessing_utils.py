@@ -70,7 +70,7 @@ class PreprocessorGerman:
 
         :param texts: A Series of course descriptions
         :type texts: pd.Series[str]
-        :return: A Series of tokenized course descriptions, where each description is a Series itself
+        :return: A Series of tokenized course descriptions, where each description is a Series by itself.
         :rtype: pd.Series[pd.Series[str]]
         """
         return texts.map(
