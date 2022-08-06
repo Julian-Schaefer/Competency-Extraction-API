@@ -6,10 +6,10 @@ Allows Initialization of the Database with Competencies and provides the termSto
 
 from typing import Union
 import os
-from db import GraphDatabaseConnection
+from app.db import GraphDatabaseConnection
 import pandas
-from preprocessing_utils import PreprocessorGerman
-from models import Competency, Label
+from app.preprocessing_utils import PreprocessorGerman
+from app.models import Competency, Label
 from typing import List
 
 

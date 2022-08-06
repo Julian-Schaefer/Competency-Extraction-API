@@ -8,8 +8,8 @@ from typing import List
 from neo4j import GraphDatabase
 from neo4j.exceptions import ClientError
 import os
-from models import Competency, Course
-from preprocessing_utils import PreprocessorGerman
+from app.models import Competency, Course
+from app.preprocessing_utils import PreprocessorGerman
 
 
 class CompetencyInsertionFailed(Exception):

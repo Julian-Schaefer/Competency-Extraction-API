@@ -5,8 +5,8 @@ Defines the generic interface of a Competency Extractor and also contains differ
 """
 
 from typing import List, Tuple
-from models import Competency
-from store import Store, StoreLocal
+from app.models import Competency
+from app.store import Store, StoreLocal
 import pandas as pd
 import spacy
 import os
@@ -205,7 +205,9 @@ class MLCompetencyExtractor(CompetencyExtractorInterface):
 
             course_competencies = []
             for entity in entities:
-                competencies = self.store.check_sequence(entity.text.split(" "))
+                competencies = self.store.check_sequence(
+                    entity.text.split(" ")
+                )
                 course_competencies += competencies
 
             all_competencies += [course_competencies]
