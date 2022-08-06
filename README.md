@@ -45,6 +45,13 @@ ML_DIR=./ML/
 5. `pipenv run python -m flask run` to start the server (for Dev/Debug purposes)
 6. `curl -X POST http://localhost:5000/competencies/initialize` to initialize the Database and Store (takes around 5 Minutes)
 
+### Running the Unit Tests
+After having executed the prerequisites for Development in General (make sure the database is running), use the following commands to run the tests:
+
+1. If the database is already initialized: Run `pipenv run pytest tests/ -k 'not initialize'`
+2. If the database is not initialized, to test the initialization: Run `pipenv run pytest tests/ -k 'initialize'`
+
+
 ### Clean up Database
 
 1. `match (a) -[r] -> () delete a, r` to clean up relations
@@ -64,6 +71,9 @@ spacy files
 You can find the documentation of our API at `http://localhost:5000/api/docs` once you have the system up and running.
 
 ## Generate HTML Documentation of the Project
+
+A recent version of the HTML Documentation of the Code can be found in the `docs/html` folder.
+However, to manually generate the latest version based on the current source code, execute:
 
 1. `pipenv install` to install required dependencies
 2. `pipenv run make html` to generate HTML documentation based on the current Source Code

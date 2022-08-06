@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>db.py &#8212; AWT-Project  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="models.py" href="models.html" />
+    <link rel="prev" title="__init__.py" href="__init__.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <span class="target" id="module-app.db"></span><section id="db-py">
+<h1>db.py<a class="headerlink" href="#db-py" title="Permalink to this heading">¶</a></h1>
+<p>Everything related to interacting with the Neo4J Graph Database.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="app.db.CompetencyInsertionFailed">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.db.</span></span><span class="sig-name descname"><span class="pre">CompetencyInsertionFailed</span></span><a class="headerlink" href="#app.db.CompetencyInsertionFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when competency couldn’t be inserted into the DB</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="app.db.CourseAlreadyExists">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.db.</span></span><span class="sig-name descname"><span class="pre">CourseAlreadyExists</span></span><a class="headerlink" href="#app.db.CourseAlreadyExists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when course already exists in the DB</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="app.db.CourseInsertionFailed">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.db.</span></span><span class="sig-name descname"><span class="pre">CourseInsertionFailed</span></span><a class="headerlink" href="#app.db.CourseInsertionFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when course couldn’t be inserted into the DB</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.db.</span></span><span class="sig-name descname"><span class="pre">GraphDatabaseConnection</span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class handles all interactions with the Neo4J Graph Database</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#app.db.GraphDatabaseConnection.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the Database Connection</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.create_competencies">
+<span class="sig-name descname"><span class="pre">create_competencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">competencies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.create_competencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert competencies with their properties and labels into the db</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>competencies</strong> (<em>List</em><em>[</em><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><em>Competency</em></a><em>]</em>) – Competencies with Properties and Labels</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.CompetencyInsertionFailed" title="app.db.CompetencyInsertionFailed"><strong>CompetencyInsertionFailed</strong></a> – if insertion into DB failed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.create_competency">
+<span class="sig-name descname"><span class="pre">create_competency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">competency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.create_competency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert competeny with its properties and labels into the db</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>competency</strong> (<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><em>Competency</em></a>) – Competency with Properties and Labels</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.CompetencyInsertionFailed" title="app.db.CompetencyInsertionFailed"><strong>CompetencyInsertionFailed</strong></a> – if insertion into DB failed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.create_course">
+<span class="sig-name descname"><span class="pre">create_course</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">course_description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">associated_competencies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="models.html#app.models.Course" title="app.models.Course"><span class="pre">Course</span></a></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.create_course" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert Course with its description and associated competencies using the specified competency extractor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>course_description</strong> (<em>str</em>) – description of course</p></li>
+<li><p><strong>extractor</strong> (<em>str</em>) – extractor used e.g. paper or ml</p></li>
+<li><p><strong>associated_competencies</strong> (<em>List</em><em>[</em><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><em>Competency</em></a><em>]</em>) – associated competencies for this course description</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.CourseInsertionFailed" title="app.db.CourseInsertionFailed"><strong>CourseInsertionFailed</strong></a> – if insertion into DB failed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.find_competencies_by_course">
+<span class="sig-name descname"><span class="pre">find_competencies_by_course</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">course_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.find_competencies_by_course" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find competencies by matching the course that they are connected to provided by it’s ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>course_id</strong> (<em>int</em>) – id of the course</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.RetrievingCompetencyFailed" title="app.db.RetrievingCompetencyFailed"><strong>RetrievingCompetencyFailed</strong></a> – if communication with the database goes wrong</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Matching competencies</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.find_competencies_by_text_query">
+<span class="sig-name descname"><span class="pre">find_competencies_by_text_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_search_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.find_competencies_by_text_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all competencies by text query. The competencies will be retrieved either by
+searching for an exact match in the competency description (case-sensitive in this case), or
+by using the preprocessing pipeline to preprocess the text and then search for all labels that contain
+the preprocessed search query and returning their associated competencies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text_search_query</strong> (<em>str</em>) – sequence of words</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.RetrievingCompetencyFailed" title="app.db.RetrievingCompetencyFailed"><strong>RetrievingCompetencyFailed</strong></a> – if communication with the database goes wrong</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Matching competencies</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.find_competency_by_sequence">
+<span class="sig-name descname"><span class="pre">find_competency_by_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.find_competency_by_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all competencies by matching their labels to the complete sequence that
+has been provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sequence</strong> (<em>str</em>) – sequence of words</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.RetrievingCompetencyFailed" title="app.db.RetrievingCompetencyFailed"><strong>RetrievingCompetencyFailed</strong></a> – if communication with the database goes wrong</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Matching competencies</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.find_courses_by_competency">
+<span class="sig-name descname"><span class="pre">find_courses_by_competency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">competency_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Course" title="app.models.Course"><span class="pre">Course</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.find_courses_by_competency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find courses by matching their competency provided by it’s ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>competency_id</strong> (<em>int</em>) – id of the competency</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.RetrievingCourseFailed" title="app.db.RetrievingCourseFailed"><strong>RetrievingCourseFailed</strong></a> – if communication with the database goes wrong</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Matching courses</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="models.html#app.models.Course" title="app.models.Course">Course</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.find_courses_by_text_query">
+<span class="sig-name descname"><span class="pre">find_courses_by_text_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_search_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Course" title="app.models.Course"><span class="pre">Course</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.find_courses_by_text_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find courses by text query. The query will be used for a full-text search on the course
+descriptions, looking for exact matches of the query in the descriptions (e.g. search is case-sensitive).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text_search_query</strong> (<em>str</em>) – text query</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.RetrievingCourseFailed" title="app.db.RetrievingCourseFailed"><strong>RetrievingCourseFailed</strong></a> – if communication with the database goes wrong</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Matching courses</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="models.html#app.models.Course" title="app.models.Course">Course</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.find_label_by_term">
+<span class="sig-name descname"><span class="pre">find_label_by_term</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.find_label_by_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves all labels containing this term and returns true, if there
+is more than 1 label containing that term. Returns false otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>term</strong> (<em>str</em>) – a single term</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#app.db.RetrievingLabelFailed" title="app.db.RetrievingLabelFailed"><strong>RetrievingLabelFailed</strong></a> – if communication with the database goes wrong</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If the term exists in a label</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.retrieve_all_competencies">
+<span class="sig-name descname"><span class="pre">retrieve_all_competencies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.retrieve_all_competencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Queries all nodes from the DB with the label competency</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#app.db.RetrievingCompetencyFailed" title="app.db.RetrievingCompetencyFailed"><strong>RetrievingCompetencyFailed</strong></a> – if retrieving competencies failed</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>all competencies</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.db.GraphDatabaseConnection.retrieve_all_courses">
+<span class="sig-name descname"><span class="pre">retrieve_all_courses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Course" title="app.models.Course"><span class="pre">Course</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.db.GraphDatabaseConnection.retrieve_all_courses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Queries all nodes from the DB with the label course</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#app.db.RetrievingCourseFailed" title="app.db.RetrievingCourseFailed"><strong>RetrievingCourseFailed</strong></a> – if retrieving courses failed</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>All courses</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="models.html#app.models.Course" title="app.models.Course">Course</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="app.db.RetrievingCompetencyFailed">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.db.</span></span><span class="sig-name descname"><span class="pre">RetrievingCompetencyFailed</span></span><a class="headerlink" href="#app.db.RetrievingCompetencyFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when competency(ies) couldn’t be retrieved</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="app.db.RetrievingCourseFailed">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.db.</span></span><span class="sig-name descname"><span class="pre">RetrievingCourseFailed</span></span><a class="headerlink" href="#app.db.RetrievingCourseFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when course(s) couldn’t be retrieved</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="app.db.RetrievingLabelFailed">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.db.</span></span><span class="sig-name descname"><span class="pre">RetrievingLabelFailed</span></span><a class="headerlink" href="#app.db.RetrievingLabelFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when label/s couldn’t be retrieved</p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">AWT-Project</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="__init__.html">__init__.py</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">db.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">models.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="store.html">store.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routes.html">routes.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="competency_extractor.html">competency_extractor.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing_utils.html">preprocessing_utils.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="machine_learning.html">machine_learning.py</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="__init__.html" title="previous chapter">__init__.py</a></li>
+      <li>Next: <a href="models.html" title="next chapter">models.py</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Lu Kalkbrenner, Julian David Schäfer, Amir Mohammad.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/db.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

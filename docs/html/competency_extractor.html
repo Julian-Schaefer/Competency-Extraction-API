@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>competency_extractor.py &#8212; AWT-Project  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="preprocessing_utils.py" href="preprocessing_utils.html" />
+    <link rel="prev" title="routes.py" href="routes.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <span class="target" id="module-app.competency_extractor"></span><section id="competency-extractor-py">
+<h1>competency_extractor.py<a class="headerlink" href="#competency-extractor-py" title="Permalink to this heading">¶</a></h1>
+<p>Defines the generic interface of a Competency Extractor and also contains different implementations of Competency Extractors.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app.competency_extractor.CompetencyExtractorInterface">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.competency_extractor.</span></span><span class="sig-name descname"><span class="pre">CompetencyExtractorInterface</span></span><a class="headerlink" href="#app.competency_extractor.CompetencyExtractorInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Defines the basic Interface for Competency Extractors</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app.competency_extractor.CompetencyExtractorInterface.extract_competencies">
+<span class="sig-name descname"><span class="pre">extract_competencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">course_descriptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.competency_extractor.CompetencyExtractorInterface.extract_competencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract competencies from Course Descriptions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>course_descriptions</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A List of Course Descriptions</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>For each course description a list of competencies that have been extracted.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="app.competency_extractor.DummyCompetencyExtractor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.competency_extractor.</span></span><span class="sig-name descname"><span class="pre">DummyCompetencyExtractor</span></span><a class="headerlink" href="#app.competency_extractor.DummyCompetencyExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#app.competency_extractor.CompetencyExtractorInterface" title="app.competency_extractor.CompetencyExtractorInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">CompetencyExtractorInterface</span></code></a></p>
+<p>A First Dummy Competency Extractor used only for testing and initial setup.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app.competency_extractor.DummyCompetencyExtractor.extract_competencies">
+<span class="sig-name descname"><span class="pre">extract_competencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">course_descriptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.competency_extractor.DummyCompetencyExtractor.extract_competencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract competencies from Course Descriptions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>course_descriptions</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A List of Course Descriptions</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>For each course description a list of competencies that have been extracted.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="app.competency_extractor.MLCompetencyExtractor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.competency_extractor.</span></span><span class="sig-name descname"><span class="pre">MLCompetencyExtractor</span></span><a class="headerlink" href="#app.competency_extractor.MLCompetencyExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#app.competency_extractor.CompetencyExtractorInterface" title="app.competency_extractor.CompetencyExtractorInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">CompetencyExtractorInterface</span></code></a></p>
+<p>This Competency Extractor uses a Machine Learning Model that has been trained on a Dataset which was generated using
+the reference Competency Extractor, namely <a class="reference internal" href="#app.competency_extractor.PaperCompetencyExtractor" title="app.competency_extractor.PaperCompetencyExtractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">app.competency_extractor.PaperCompetencyExtractor</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>store</strong> – An Instance of a Store which provides the Preprocessor</p></li>
+<li><p><strong>preprocessor</strong> – An instance of the <a class="reference internal" href="preprocessing_utils.html#app.preprocessing_utils.PreprocessorGerman" title="app.preprocessing_utils.PreprocessorGerman"><code class="xref py py-class docutils literal notranslate"><span class="pre">app.preprocessing_utils.PreprocessorGerman</span></code></a> class to preprocess the labels of Competencies</p></li>
+<li><p><strong>nlp</strong> – An instance of a spaCy model, which is loaded from the location of the “MODEL_FILES” environment variable</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="app.competency_extractor.MLCompetencyExtractor.extract_competencies">
+<span class="sig-name descname"><span class="pre">extract_competencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">course_descriptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.competency_extractor.MLCompetencyExtractor.extract_competencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract competencies from Course Descriptions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>course_descriptions</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A List of Course Descriptions</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>For each course description a list of competencies that have been extracted.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="app.competency_extractor.MLCompetencyExtractorLocal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.competency_extractor.</span></span><span class="sig-name descname"><span class="pre">MLCompetencyExtractorLocal</span></span><a class="headerlink" href="#app.competency_extractor.MLCompetencyExtractorLocal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#app.competency_extractor.MLCompetencyExtractor" title="app.competency_extractor.MLCompetencyExtractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">MLCompetencyExtractor</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="app.competency_extractor.PaperCompetencyExtractor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.competency_extractor.</span></span><span class="sig-name descname"><span class="pre">PaperCompetencyExtractor</span></span><a class="headerlink" href="#app.competency_extractor.PaperCompetencyExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#app.competency_extractor.CompetencyExtractorInterface" title="app.competency_extractor.CompetencyExtractorInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">CompetencyExtractorInterface</span></code></a></p>
+<p>This Competency Extractor implements the approach/algorithm presented by the paper
+“Ontology-based Entity Recognition and Annotation” (available at <a class="reference external" href="http://ceur-ws.org/Vol-2535/paper_4.pdf">http://ceur-ws.org/Vol-2535/paper_4.pdf</a>).
+It is used as the reference implementation that can be used to compare results to
+other implementations of Competency Extractors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>store</strong> – An Instance of a Store to check labels and sequences</p></li>
+<li><p><strong>preprocessor</strong> – An instance of the <a class="reference internal" href="preprocessing_utils.html#app.preprocessing_utils.PreprocessorGerman" title="app.preprocessing_utils.PreprocessorGerman"><code class="xref py py-class docutils literal notranslate"><span class="pre">app.preprocessing_utils.PreprocessorGerman</span></code></a> class to preprocess the labels of Competencies</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="app.competency_extractor.PaperCompetencyExtractor.extract_competencies">
+<span class="sig-name descname"><span class="pre">extract_competencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">course_descriptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.competency_extractor.PaperCompetencyExtractor.extract_competencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract competencies from Course Descriptions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>course_descriptions</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A List of Course Descriptions</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>For each course description a list of competencies that have been extracted.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="app.competency_extractor.PaperCompetencyExtractorLocal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.competency_extractor.</span></span><span class="sig-name descname"><span class="pre">PaperCompetencyExtractorLocal</span></span><a class="headerlink" href="#app.competency_extractor.PaperCompetencyExtractorLocal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#app.competency_extractor.PaperCompetencyExtractor" title="app.competency_extractor.PaperCompetencyExtractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">PaperCompetencyExtractor</span></code></a></p>
+<p>This class contains the same functionality as the PaperCompetencyExtractor class. The only difference is that this
+class can be used to extract competencies from course descriptions locally, without having to start the server.
+Extracting competencies through this class however does not upload the courses and extracted competencies to the
+Database. The only purpose of this class is to extract competencies in big batches in order to evaluate the results and
+compare them to the results of other extractors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>store</strong> – An Instance of a local Store to check labels and sequences</p></li>
+<li><p><strong>preprocessor</strong> – An instance of the <a class="reference internal" href="preprocessing_utils.html#app.preprocessing_utils.PreprocessorGerman" title="app.preprocessing_utils.PreprocessorGerman"><code class="xref py py-class docutils literal notranslate"><span class="pre">app.preprocessing_utils.PreprocessorGerman</span></code></a> class to preprocess the labels of Competencies</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">AWT-Project</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="__init__.html">__init__.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="db.html">db.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">models.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="store.html">store.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routes.html">routes.py</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">competency_extractor.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing_utils.html">preprocessing_utils.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="machine_learning.html">machine_learning.py</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="routes.html" title="previous chapter">routes.py</a></li>
+      <li>Next: <a href="preprocessing_utils.html" title="next chapter">preprocessing_utils.py</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Lu Kalkbrenner, Julian David Schäfer, Amir Mohammad.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/competency_extractor.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

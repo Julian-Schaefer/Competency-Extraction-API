@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>store.py &#8212; AWT-Project  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="routes.py" href="routes.html" />
+    <link rel="prev" title="models.py" href="models.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <span class="target" id="module-app.store"></span><section id="store-py">
+<h1>store.py<a class="headerlink" href="#store-py" title="Permalink to this heading">¶</a></h1>
+<p>Allows Initialization of the Database with Competencies and provides the termStore as well as the sequenceStore.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app.store.Store">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.store.</span></span><span class="sig-name descname"><span class="pre">Store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'de'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#app.store.Store" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The Store class provides the functionality to initialize the Graph Database with EU-ESCO competencies.
+Furthermore, it also acts as the termStore and as the sequenceStore which are used by
+the <a class="reference internal" href="competency_extractor.html#app.competency_extractor.PaperCompetencyExtractor" title="app.competency_extractor.PaperCompetencyExtractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">app.competency_extractor.PaperCompetencyExtractor</span></code></a> class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>language</strong> (<em>str</em>) – Language to use (defaults to German)</p>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>preprocessor</strong> – An instance of the <a class="reference internal" href="preprocessing_utils.html#app.preprocessing_utils.PreprocessorGerman" title="app.preprocessing_utils.PreprocessorGerman"><code class="xref py py-class docutils literal notranslate"><span class="pre">app.preprocessing_utils.PreprocessorGerman</span></code></a> class to preprocess the labels of Competencies</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="app.store.Store.check_sequence">
+<span class="sig-name descname"><span class="pre">check_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency"><span class="pre">Competency</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.store.Store.check_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a sequence of words is contained in the sequence store and return all competencies with a label that matches
+the sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sequence</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – A sequence of words as a list of string tokens or as string</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of all competencies contained in the sequence store, whose labels match the given sequence.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="models.html#app.models.Competency" title="app.models.Competency">Competency</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.store.Store.check_term">
+<span class="sig-name descname"><span class="pre">check_term</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#app.store.Store.check_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a term is contained in the term store.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>term</strong> (<em>str</em>) – A single term</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the term is contained in the term store and False if not</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.store.Store.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#app.store.Store.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the Database with Competencies imported from a EU-ESCO compatible .csv File.
+The Location of the .csv file has to be specified using the environment variable “DATA_FILE”</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="app.store.StoreAlreadyInitialized">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.store.</span></span><span class="sig-name descname"><span class="pre">StoreAlreadyInitialized</span></span><a class="headerlink" href="#app.store.StoreAlreadyInitialized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when the Store has already been initialized.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="app.store.StoreLocal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app.store.</span></span><span class="sig-name descname"><span class="pre">StoreLocal</span></span><a class="headerlink" href="#app.store.StoreLocal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The StoreLocal class provides the same functionality as the Store class. The only difference is that the StoreLocal
+class can be used locally without having to start the server and without having to connect to the Database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>preprocessor</strong> – An instance of the <a class="reference internal" href="preprocessing_utils.html#app.preprocessing_utils.PreprocessorGerman" title="app.preprocessing_utils.PreprocessorGerman"><code class="xref py py-class docutils literal notranslate"><span class="pre">app.preprocessing_utils.PreprocessorGerman</span></code></a> class to preprocess the labels of Competencies</p></li>
+<li><p><strong>store_df</strong> – A DataFrame representation of a .csv file (located by the Environment Variable “LABELED_COMPETENCIES_FILE”) which contains all preferred and alternative labels that are contained in the EU ESCO API.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="app.store.StoreLocal.check_sequence">
+<span class="sig-name descname"><span class="pre">check_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#app.store.StoreLocal.check_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a sequence is contained in the sequence store and return all competencies with a label that matches
+the sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sequence</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A sequence of words as a list of string tokens</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of all competencies contained in the sequence store, whose labels match the given sequence.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app.store.StoreLocal.check_term">
+<span class="sig-name descname"><span class="pre">check_term</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#app.store.StoreLocal.check_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a term is contained in the term store.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>term</strong> (<em>str</em>) – A single term</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the term is contained in the term store and False if not</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">AWT-Project</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="__init__.html">__init__.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="db.html">db.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">models.py</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">store.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routes.html">routes.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="competency_extractor.html">competency_extractor.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing_utils.html">preprocessing_utils.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="machine_learning.html">machine_learning.py</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="models.html" title="previous chapter">models.py</a></li>
+      <li>Next: <a href="routes.html" title="next chapter">routes.py</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Lu Kalkbrenner, Julian David Schäfer, Amir Mohammad.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/store.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
