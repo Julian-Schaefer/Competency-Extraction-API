@@ -1,5 +1,11 @@
 # AWT-Project
 
+## Requirements
+1. Install **Docker** and **Docker-Compose**, refer to the installation instructions at `https://www.docker.com/` and `https://docs.docker.com/compose/`
+2. If developing or generating the HTML Documentation:
+    - Install **Python** with Version 3.9, see `https://www.python.org/downloads/`
+    - Install **pipenv**, refer to installation instructions at `https://pipenv.pypa.io/en/latest/`
+
 ## Getting started
 
 Run the following in root folder to start the system:
