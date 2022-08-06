@@ -38,6 +38,7 @@ NLTK_FILES=./data/lemma_cache_data/nltk_data
 MORPHYS_FILE=./data/lemma_cache_data/morphys.csv
 STOPWORDS_FILE=./data/lemma_cache_data/stopwords-de.txt
 ML_DIR=./ML/
+LABELED_COMPETENCIES_FILE=./data/preproccessed_labels.csv
 ```
 
 3. `docker-compose up db` to only start Neo4J Database
